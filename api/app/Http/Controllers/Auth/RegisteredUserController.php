@@ -18,7 +18,7 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): Response
+    public function store(Request $request)
     {
         \Log::info('Dados recebidos:', $request->all());
         
@@ -40,7 +40,10 @@ class RegisteredUserController extends Controller
             Auth::login($user);
 
             \Log::info('Usuário registrado com sucesso');
-            return response()->json(['message' => 'Registro realizado com sucesso']);
+            return response()->json([
+                'message' => 'Registro realizado com sucesso',
+                'user' => $user
+            ], 201);
         } catch (\Exception $e) {
             \Log::error('Erro no registro:', ['error' => $e->getMessage()]);
             return response()->json(['error' => $e->getMessage()], 500);
