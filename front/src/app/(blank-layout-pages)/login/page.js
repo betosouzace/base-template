@@ -3,14 +3,17 @@ import { useState } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaGoogle, FaFacebook } from "react-icons/fa";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { useTheme } from '@/contexts/ThemeContext';
+import { useApi } from '@/hooks/useApi';
+import { useRouter } from 'next/navigation';
 
 const Login = () => {
+  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+  const { login, loading: apiLoading, error: apiError } = useApi();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
   const validateForm = () => {
@@ -32,15 +35,15 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      setLoading(true);
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        console.log("Login successful");
+        await login(email, password);
+        router.push('/dashboard'); // Redireciona após login bem-sucedido
       } catch (error) {
-        console.error("Login failed:", error);
-      } finally {
-        setLoading(false);
+        // O erro já está sendo tratado pelo hook useApi
+        setErrors(prev => ({
+          ...prev,
+          api: error.message
+        }));
       }
     }
   };
@@ -63,30 +66,57 @@ const Login = () => {
           </h2>
         </div>
 
+        {apiError && (
+          <div className="mb-4 p-3 rounded bg-red-100 text-red-600">
+            {apiError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
-                required
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaEnvelope className={`h-5 w-5 ${theme === 'dark' ? "text-gray-400" : "text-gray-500"}`} />
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                  required
+                />
+              </div>
               {errors.email && <p className="text-red-500 text-xs italic">{errors.email}</p>}
             </div>
             <div>
               <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="password">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
-                required
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaLock className={`h-5 w-5 ${theme === 'dark' ? "text-gray-400" : "text-gray-500"}`} />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`appearance-none rounded-md relative block w-full pl-10 pr-10 px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  {showPassword ? (
+                    <FaEyeSlash className={`h-5 w-5 ${theme === 'dark' ? "text-gray-400" : "text-gray-500"} hover:text-gray-600`} />
+                  ) : (
+                    <FaEye className={`h-5 w-5 ${theme === 'dark' ? "text-gray-400" : "text-gray-500"} hover:text-gray-600`} />
+                  )}
+                </button>
+              </div>
               {errors.password && <p className="text-red-500 text-xs italic">{errors.password}</p>}
             </div>
           </div>
@@ -114,8 +144,12 @@ const Login = () => {
           </div>
 
           <div>
-            <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              {loading ? "Loading..." : "Sign In"}
+            <button 
+              type="submit" 
+              disabled={apiLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {apiLoading ? "Signing in..." : "Sign In"}
             </button>
           </div>
 
@@ -150,7 +184,7 @@ const Login = () => {
           <div className="text-center">
             <p className={`text-sm ${theme === 'dark' ? "text-gray-300" : "text-gray-600"}`}>
               Don't have an account?{" "}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign up
               </a>
             </p>

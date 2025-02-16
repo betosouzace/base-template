@@ -1,8 +1,8 @@
 FROM php:8.2-fpm
 
-# Argumentos definidos no docker-compose.yml
-ARG user
-ARG uid
+# Argumentos
+ARG user=laravel
+ARG uid=1000
 
 # Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
@@ -13,38 +13,26 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    libzip-dev \
-    default-mysql-client \
-    && docker-php-ext-configure gd \
-    && docker-php-ext-install -j$(nproc) \
-        pdo_mysql \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd \
-        zip
+    libzip-dev
 
 # Limpa cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Obtém última versão do Composer
+# Instala extensões PHP
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Instala Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Cria usuário do sistema
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
+RUN useradd -G www-data,root -u $uid -d /home/$user $user || true
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
 # Define diretório de trabalho
 WORKDIR /var/www
 
-# Copia arquivos do projeto
-COPY . /var/www
-
-# Define permissões
-RUN chown -R $user:$user /var/www
-
+# Define usuário
 USER $user
 
 # Expõe porta 9000
