@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: theme('colors.background.light');
+  --foreground: theme('colors.foreground.light');
+}
+
+[data-theme='dark'] {
+  --background: theme('colors.background.dark');
+  --foreground: theme('colors.foreground.dark');
+}
