@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { ThemeProvider } from '../contexts/ThemeContext';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -20,28 +20,12 @@ const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  const [theme, setTheme] = useState('light')
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light'
-    setTheme(newTheme)
-    document.documentElement.setAttribute('data-theme', newTheme)
-  }
-
-  useEffect(() => {
-    // Define o tema light como padrão
-    document.documentElement.setAttribute('data-theme', 'light')
-  }, [])
-
   return (
-    <html lang="en" data-theme={theme}>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <button onClick={toggleTheme}>
-          {theme === 'light' ? '🌙' : '☀️'}
-        </button>
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
