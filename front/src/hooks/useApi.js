@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { API_URL, API_TIMEOUT, API_CONFIG } from '@/config/api';
+import { useRouter } from 'next/navigation';
 
 // Criar uma única instância do axios
 const api = axios.create({
@@ -9,48 +10,28 @@ const api = axios.create({
   ...API_CONFIG
 });
 
-// Função para obter o token CSRF
-const getCsrfToken = async () => {
-  try {
-    await axios.get(`${API_URL}/sanctum/csrf-cookie`, {
-      withCredentials: true
-    });
-    // Aguarda um momento para garantir que o cookie foi definido
-    await new Promise(resolve => setTimeout(resolve, 100));
-  } catch (error) {
-    console.error('Erro ao obter CSRF token:', error);
-    throw error;
-  }
-};
-
-// Interceptor para adicionar o token CSRF
-api.interceptors.request.use(async (config) => {
-  // Obtém o token CSRF do cookie
-  const token = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('XSRF-TOKEN='))
-    ?.split('=')[1];
-
-  if (!token) {
-    await getCsrfToken();
-  }
-
-  // Obtém o token novamente após a requisição do CSRF
-  const updatedToken = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('XSRF-TOKEN='))
-    ?.split('=')[1];
-
-  if (updatedToken) {
-    config.headers['X-XSRF-TOKEN'] = decodeURIComponent(updatedToken);
-  }
-
-  return config;
-});
-
-export function useApi() {
+export const useApi = () => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const handleResponse = async (promise) => {
+    try {
+      const response = await promise;
+      return {
+        data: response.data,
+        error: null,
+        status: response.status
+      };
+    } catch (error) {
+      console.error('API Error:', error);
+      return {
+        data: null,
+        error: error.response?.data?.message || 'Erro ao processar a requisição',
+        status: error.response?.status
+      };
+    }
+  };
 
   const handleError = (error) => {
     if (error.response?.status === 422) {
@@ -68,10 +49,23 @@ export function useApi() {
       
       const response = await api.post('/login', { email, password });
       
-      // O Laravel Sanctum já configura o cookie automaticamente
-      return response.data;
+      // Verificar se o login foi bem-sucedido
+      if (response.status === 200) {
+        // Aguardar cookies serem definidos
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verificar se o usuário está autenticado
+        const userResponse = await api.get('/api/user');
+        
+        if (userResponse.data) {
+          router.push('/home');
+          return userResponse.data;
+        }
+      } else {
+        throw new Error('Falha na autenticação');
+      }
     } catch (err) {
-      const message = handleError(err);
+      const message = err.response?.data?.message || 'Erro ao realizar login';
       setError(message);
       throw new Error(message);
     } finally {
@@ -83,9 +77,6 @@ export function useApi() {
     try {
       setLoading(true);
       setError(null);
-      
-      // Garante que temos um token CSRF antes de fazer a requisição
-      await getCsrfToken();
       
       const response = await api.post('/register', {
         name,
@@ -169,6 +160,10 @@ export function useApi() {
     forgotPassword,
     resetPassword,
     logout,
-    api
+    api,
+    get: (url) => handleResponse(api.get(url)),
+    post: (url, data) => handleResponse(api.post(url, data)),
+    put: (url, data) => handleResponse(api.put(url, data)),
+    delete: (url) => handleResponse(api.delete(url))
   };
-} 
+}; 

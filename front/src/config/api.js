@@ -3,6 +3,7 @@ export const API_TIMEOUT = 5000 // 5 segundos
 
 // Configuração padrão do axios
 export const API_CONFIG = {
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
   headers: {
     'X-Requested-With': 'XMLHttpRequest',

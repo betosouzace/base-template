@@ -45,31 +45,23 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      try {
-        setErrors({}); // Limpa erros anteriores
-        const result = await register(
-          name, 
-          email, 
-          password, 
-          passwordConfirmation
-        );
-        
-        // Define o estado de sucesso
-        setSuccess(true);
-        
-        // Aguarda um momento antes de redirecionar
-        setTimeout(() => {
-          router.push('/login?registered=true');
-        }, 1500);
-        
-      } catch (error) {
-        console.error('Erro no registro:', error);
-        setErrors(prev => ({
-          ...prev,
-          api: error.message
-        }));
-      }
+    
+    const { data, error } = await register(
+      name, 
+      email, 
+      password, 
+      passwordConfirmation
+    );
+    
+    if (error) {
+      console.error('Erro no registro:', error);
+      // Mostrar mensagem de erro para o usuário
+      return;
+    }
+
+    if (data) {
+      console.log('Registro bem-sucedido:', data);
+      router.push('/login');
     }
   };
 

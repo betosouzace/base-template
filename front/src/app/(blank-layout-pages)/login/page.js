@@ -15,6 +15,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
+  const [success, setSuccess] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -37,9 +38,8 @@ const Login = () => {
     if (validateForm()) {
       try {
         await login(email, password);
-        router.push('/dashboard'); // Redireciona após login bem-sucedido
+        setSuccess(true);
       } catch (error) {
-        // O erro já está sendo tratado pelo hook useApi
         setErrors(prev => ({
           ...prev,
           api: error.message
@@ -65,6 +65,12 @@ const Login = () => {
             Sign in to your account
           </h2>
         </div>
+
+        {success && (
+          <div className="mb-4 p-3 rounded bg-green-100 text-green-600">
+            Login realizado com sucesso! Redirecionando...
+          </div>
+        )}
 
         {apiError && (
           <div className="mb-4 p-3 rounded bg-red-100 text-red-600">
@@ -146,10 +152,20 @@ const Login = () => {
           <div>
             <button 
               type="submit" 
-              disabled={apiLoading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={apiLoading || success}
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                ${success 
+                  ? 'bg-green-600 hover:bg-green-700' 
+                  : 'bg-indigo-600 hover:bg-indigo-700'} 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 
+                ${success ? 'focus:ring-green-500' : 'focus:ring-indigo-500'} 
+                disabled:opacity-50`}
             >
-              {apiLoading ? "Signing in..." : "Sign In"}
+              {apiLoading 
+                ? "Entrando..." 
+                : success 
+                  ? "Login realizado!" 
+                  : "Entrar"}
             </button>
           </div>
 
