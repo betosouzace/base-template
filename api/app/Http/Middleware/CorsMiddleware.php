@@ -11,8 +11,17 @@ class CorsMiddleware
     {
         $response = $next($request);
 
-        $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:3000');
-        // $response->headers->set('Access-Control-Allow-Origin', '*');
+        $allowedOrigins = [
+            'http://localhost:3000',
+            'http://host.docker.internal:3000'
+        ];
+
+        $origin = $request->header('Origin');
+        
+        if (in_array($origin, $allowedOrigins)) {
+            $response->headers->set('Access-Control-Allow-Origin', $origin);
+        }
+
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, Authorization, X-XSRF-TOKEN');
         $response->headers->set('Access-Control-Allow-Credentials', 'true');

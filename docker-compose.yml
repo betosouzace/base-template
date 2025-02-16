@@ -16,6 +16,8 @@ services:
       - WATCHPACK_POLLING=true  # Habilita polling para hot reload
       - NEXT_TELEMETRY_DISABLED=1
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - app-network
     depends_on:
@@ -37,6 +39,8 @@ services:
       - SESSION_DOMAIN=localhost
       - SANCTUM_STATEFUL_DOMAINS=localhost:3000
       - CORS_ALLOWED_ORIGINS=http://localhost:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - app-network
     depends_on:
@@ -59,6 +63,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # Banco de Dados MySQL
   db:
