@@ -1,0 +1,8 @@
+---
+description: Regras API
+globs: *.php, *.js, *.jsx
+---
+
+# Your rule content
+
+- Não existem prefixos na API como por exemplo api/ ou api/auth/

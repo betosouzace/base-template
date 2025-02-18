@@ -1,0 +1,17 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+front/.pnpm-store/*
+front/.next/*
+front/.env
+front/.env.local
+front/.env.development.local
+front/.env.test.local
+front/.env.production.local
+front/node_modules/*
+.gitignore
+.git/*
+api/vendor/*
+api/node_modules/*
+api/storage/*
+api/bootstrap/*
+api/public/*
+api/resources/views/vendor/*

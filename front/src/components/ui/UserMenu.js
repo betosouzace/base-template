@@ -1,10 +1,14 @@
 'use client';
 import { useRef, useEffect } from 'react';
 import { FiUser, FiSettings, FiLogOut } from 'react-icons/fi';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const UserMenu = ({ show, setShow, setShowNotifications }) => {
   const userMenuRef = useRef(null);
   const buttonRef = useRef(null);
+  const { logout, user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -35,10 +39,15 @@ const UserMenu = ({ show, setShow, setShowNotifications }) => {
     };
   }, [show, setShow]);
 
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
   const userMenuItems = [
-    { title: "Profile", icon: <FiUser />, action: () => {} },
-    { title: "Settings", icon: <FiSettings />, action: () => {} },
-    { title: "Logout", icon: <FiLogOut />, action: () => {} }
+    { title: "Profile", icon: <FiUser />, action: () => router.push('/profile') },
+    { title: "Settings", icon: <FiSettings />, action: () => router.push('/settings') },
+    { title: "Logout", icon: <FiLogOut />, action: handleLogout }
   ];
 
   return (
@@ -66,12 +75,12 @@ const UserMenu = ({ show, setShow, setShowNotifications }) => {
             fontSize="14"
             fontWeight="500"
           >
-            JD
+            {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
           </text>
         </svg>
         <div className="hidden md:block">
-          <p className="text-sm font-medium text-gray-800 dark:text-white">John Doe</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Admin</p>
+          <p className="text-sm font-medium text-gray-800 dark:text-white">{user?.name || 'User'}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
         </div>
       </div>
 

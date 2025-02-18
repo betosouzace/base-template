@@ -1,5 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 
 const AuthContext = createContext({});
@@ -9,6 +10,8 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const api = useApi();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     checkAuth();
@@ -18,7 +21,7 @@ export function AuthProvider({ children }) {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        const response = await api.get('/api/auth/me');
+        const response = await api.get('/me');
         setUser(response.data);
         setIsAuthenticated(true);
       }
@@ -29,13 +32,31 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (email, password, remember = false) => {
     try {
-      const response = await api.post('/api/auth/login', { email, password });
+      const response = await api.post('/login', { 
+        email, 
+        password,
+        remember 
+      });
       const { token, user } = response.data;
-      localStorage.setItem('token', token);
+      
+      if (remember) {
+        localStorage.setItem('token', token);
+      } else {
+        sessionStorage.setItem('token', token);
+      }
+      
       setUser(user);
       setIsAuthenticated(true);
+
+      const redirectUrl = searchParams.get('redirectUrl');
+      if (redirectUrl) {
+        router.push(decodeURIComponent(redirectUrl));
+      } else {
+        router.push('/home');
+      }
+      
       return true;
     } catch (error) {
       return false;
@@ -44,6 +65,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setUser(null);
     setIsAuthenticated(false);
   };
