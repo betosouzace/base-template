@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { FiSave, FiRotateCcw, FiUpload, FiDownload } from "react-icons/fi";
 import { FaBuilding, FaCreditCard, FaComments, FaPalette } from "react-icons/fa";
+import { BsSun, BsMoonStars } from "react-icons/bs";
+import { HiOutlineAdjustments } from "react-icons/hi";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApi } from '@/hooks/useApi';
@@ -47,7 +49,7 @@ const SettingsPage = () => {
 
   const loadSettings = async () => {
     try {
-      const response = await api.get('/settings');
+      const response = await api.get('settings');
       const { user_settings, company_settings } = response.data;
       
       setFormData({
@@ -92,18 +94,18 @@ const SettingsPage = () => {
   const handleSave = async () => {
     try {
       // Atualiza configurações do usuário
-      await api.put('/settings/user', {
+      await api.put('settings/user', {
         settings: formData.user.settings
       });
 
       // Atualiza configurações da empresa se o usuário estiver vinculado a uma
       if (user.company_id) {
-        await api.put('/settings/company', {
+        await api.put('settings/company', {
           settings: formData.company.settings
         });
 
         // Atualiza dados básicos da empresa
-        await api.put(`/companies/${user.company_id}`, {
+        await api.put(`companies/${user.company_id}`, {
           name: formData.company.name,
           document: formData.company.document,
           email: formData.company.email,
@@ -250,25 +252,90 @@ const SettingsPage = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                     Tema
                   </label>
-                  <div className="space-y-2">
-                    {['light', 'semi-dark', 'dark'].map((themeOption) => (
-                      <label key={themeOption} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="theme"
-                          value={themeOption}
-                          checked={theme === themeOption}
-                          onChange={() => {
-                            toggleTheme();
-                            handleSettingsChange('user', 'theme', themeOption);
-                          }}
-                          className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                        />
-                        <span className="text-gray-700 dark:text-gray-300 capitalize">
-                          {themeOption === 'semi-dark' ? 'Semi Escuro' : themeOption === 'dark' ? 'Escuro' : 'Claro'}
-                        </span>
-                      </label>
-                    ))}
+                  <div className="inline-flex rounded-md shadow-sm" role="group">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toggleTheme('light');
+                        handleSettingsChange('user', 'theme', 'light');
+                      }}
+                      className={`
+                        inline-flex items-center px-4 py-2 text-sm font-medium 
+                        border border-gray-200 
+                        rounded-l-lg 
+                        hover:bg-gray-100 
+                        hover:text-indigo-700 
+                        focus:z-10 
+                        focus:ring-2 
+                        focus:ring-indigo-500 
+                        focus:text-indigo-700
+                        dark:border-gray-600 
+                        dark:hover:text-white 
+                        dark:hover:bg-gray-600 
+                        ${theme === 'light' 
+                          ? 'bg-indigo-500 text-white hover:text-white hover:bg-indigo-600' 
+                          : 'bg-white text-gray-900 dark:bg-gray-700 dark:text-white'
+                        }
+                      `}
+                    >
+                      <BsSun className="mr-2 h-4 w-4" />
+                      Claro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toggleTheme('semi-dark');
+                        handleSettingsChange('user', 'theme', 'semi-dark');
+                      }}
+                      className={`
+                        inline-flex items-center px-4 py-2 text-sm font-medium 
+                        border-t border-b border-gray-200
+                        hover:bg-gray-100 
+                        hover:text-indigo-700 
+                        focus:z-10 
+                        focus:ring-2 
+                        focus:ring-indigo-500 
+                        focus:text-indigo-700
+                        dark:border-gray-600 
+                        dark:hover:text-white 
+                        dark:hover:bg-gray-600
+                        ${theme === 'semi-dark' 
+                          ? 'bg-indigo-500 text-white hover:text-white hover:bg-indigo-600' 
+                          : 'bg-white text-gray-900 dark:bg-gray-700 dark:text-white'
+                        }
+                      `}
+                    >
+                      <HiOutlineAdjustments className="mr-2 h-4 w-4" />
+                      Semi Escuro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toggleTheme('dark');
+                        handleSettingsChange('user', 'theme', 'dark');
+                      }}
+                      className={`
+                        inline-flex items-center px-4 py-2 text-sm font-medium 
+                        border border-gray-200 
+                        rounded-r-lg 
+                        hover:bg-gray-100 
+                        hover:text-indigo-700 
+                        focus:z-10 
+                        focus:ring-2 
+                        focus:ring-indigo-500 
+                        focus:text-indigo-700
+                        dark:border-gray-600 
+                        dark:hover:text-white 
+                        dark:hover:bg-gray-600
+                        ${theme === 'dark' 
+                          ? 'bg-indigo-500 text-white hover:text-white hover:bg-indigo-600' 
+                          : 'bg-white text-gray-900 dark:bg-gray-700 dark:text-white'
+                        }
+                      `}
+                    >
+                      <BsMoonStars className="mr-2 h-4 w-4" />
+                      Escuro
+                    </button>
                   </div>
                 </div>
                 {/* Outras configurações de interface */}

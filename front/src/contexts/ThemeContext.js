@@ -25,8 +25,7 @@ export function ThemeProvider({ children }) {
     setMounted(true);
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'semi-dark' : theme === 'semi-dark' ? 'dark' : 'light';
+  const toggleTheme = (newTheme) => {
     setTheme(newTheme);
     setSidebarTheme(newTheme === 'semi-dark' ? 'dark' : newTheme);
     
