@@ -3,19 +3,20 @@ import { useState } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaGoogle, FaFacebook } from "react-icons/fa";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { useTheme } from '@/contexts/ThemeContext';
-import { useApi } from '@/hooks/useApi';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const router = useRouter();
+  const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { login, loading: apiLoading, error: apiError } = useApi();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -36,14 +37,28 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
+      setApiLoading(true);
       try {
-        await login(email, password);
-        setSuccess(true);
+        const loginSuccess = await login(email, password);
+        if (loginSuccess) {
+          setSuccess(true);
+          setErrors({});
+          setTimeout(() => {
+            router.push('/home');
+          }, 1500);
+        } else {
+          setErrors(prev => ({
+            ...prev,
+            api: "Credenciais inválidas"
+          }));
+        }
       } catch (error) {
         setErrors(prev => ({
           ...prev,
-          api: error.message
+          api: error.message || "Erro ao realizar login"
         }));
+      } finally {
+        setApiLoading(false);
       }
     }
   };
@@ -72,9 +87,9 @@ const Login = () => {
           </div>
         )}
 
-        {apiError && (
+        {errors.api && (
           <div className="mb-4 p-3 rounded bg-red-100 text-red-600">
-            {apiError}
+            {errors.api}
           </div>
         )}
 

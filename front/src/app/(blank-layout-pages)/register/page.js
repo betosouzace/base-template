@@ -3,13 +3,13 @@ import { useState } from 'react';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from "react-icons/fa";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { useTheme } from '@/contexts/ThemeContext';
-import { useApi } from '@/hooks/useApi';
 import { useRouter } from 'next/navigation';
+import { useApi } from '@/hooks/useApi';
 
 const RegisterPage = () => {
   const router = useRouter();
+  const api = useApi();
   const { theme, toggleTheme } = useTheme();
-  const { register, loading: apiLoading, error: apiError } = useApi();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +18,7 @@ const RegisterPage = () => {
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -50,39 +51,32 @@ const RegisterPage = () => {
       return;
     }
 
+    setApiLoading(true);
     try {
-      const data =  await register(
-        name, 
-        email, 
-        password, 
-        passwordConfirmation
-      );
-      console.log('data', data);
-      
-      if (error) {
-        setErrors(prev => ({
-          ...prev,
-          api: error.message || 'Ocorreu um erro durante o registro'
-        }));
-        return;
-      }
+      const response = await api.post('/api/register', {
+        name,
+        email,
+        password,
+        password_confirmation: passwordConfirmation
+      });
 
-      if (data) {
-        console.log('Registro bem-sucedido:', data);
+      if (response.data) {
         setSuccess(true);
         setErrors({});
         
-        // Aguarda 2 segundos antes de redirecionar
+        // Aguarda 1.5 segundos antes de redirecionar
         setTimeout(() => {
           router.push('/login');
-        }, 2000);
+        }, 1500);
       }
     } catch (err) {
       console.error('Erro no registro:', err);
       setErrors(prev => ({
         ...prev,
-        api: 'Ocorreu um erro durante o registro. Tente novamente.'
+        api: err.response?.data?.message || 'Ocorreu um erro durante o registro. Tente novamente.'
       }));
+    } finally {
+      setApiLoading(false);
     }
   };
 

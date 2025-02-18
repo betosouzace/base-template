@@ -1,11 +1,11 @@
 'use client';
-import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AuthenticatedLayout = ({ children }) => {
-  const { isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -21,11 +21,7 @@ const AuthenticatedLayout = ({ children }) => {
     );
   }
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return isAuthenticated ? <>{children}</> : null;
 };
 
 export default AuthenticatedLayout; 
