@@ -12,32 +12,71 @@ class SettingsController extends Controller
     {
         $user = $request->user();
         return response()->json([
-            'user_settings' => $user->settings,
-            'company_settings' => $user->company?->settings
+            'user_settings' => $user->settings ?? [
+                'theme' => 'light',
+                'density' => 'normal',
+                'highContrast' => false,
+                'fontSize' => 'medium'
+            ],
+            'company_settings' => $user->company?->settings ?? [
+                'paymentMethods' => [],
+                'currency' => 'BRL',
+                'smtpServer' => '',
+                'senderEmail' => '',
+                'whatsappKey' => '',
+                'telegramToken' => '',
+            ]
         ]);
     }
 
     public function updateUserSettings(Request $request)
     {
+        $request->validate([
+            'settings' => 'required|array',
+            'settings.theme' => 'required|string|in:light,semi-dark,dark',
+            'settings.density' => 'required|string|in:compact,normal,comfortable',
+            'settings.highContrast' => 'required|boolean',
+            'settings.fontSize' => 'required|string|in:small,medium,large'
+        ]);
+
         $user = $request->user();
-        $user->settings = array_merge($user->settings ?? [], $request->settings);
+        $user->settings = $request->settings;
         $user->save();
 
-        return response()->json(['message' => 'Configurações atualizadas com sucesso']);
+        return response()->json([
+            'message' => 'Configurações do usuário atualizadas com sucesso',
+            'settings' => $user->settings
+        ]);
     }
 
     public function updateCompanySettings(Request $request)
     {
+        $request->validate([
+            'settings' => 'required|array',
+            'settings.paymentMethods' => 'nullable|array',
+            'settings.paymentMethods.*' => 'string',
+            'settings.currency' => 'nullable|string|size:3',
+            'settings.smtpServer' => 'nullable|string',
+            'settings.senderEmail' => 'nullable|email',
+            'settings.whatsappKey' => 'nullable|string',
+            'settings.telegramToken' => 'nullable|string'
+        ]);
+
         $user = $request->user();
         $company = $user->company;
 
         if (!$company) {
-            return response()->json(['message' => 'Usuário não está vinculado a uma empresa'], 403);
+            return response()->json([
+                'message' => 'Usuário não está vinculado a uma empresa'
+            ], 403);
         }
 
         $company->settings = array_merge($company->settings ?? [], $request->settings);
         $company->save();
 
-        return response()->json(['message' => 'Configurações da empresa atualizadas com sucesso']);
+        return response()->json([
+            'message' => 'Configurações da empresa atualizadas com sucesso',
+            'settings' => $company->settings
+        ]);
     }
 } 
