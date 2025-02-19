@@ -8,25 +8,22 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\CompanyController;
 
 // Rotas públicas
-Route::post('/register', [RegisteredUserController::class, 'store']);
-Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+Route::post('register', [RegisteredUserController::class, 'store']);
+Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
-// Rotas autenticadas
-Route::group(['middleware' => ['auth:sanctum']], function () {
-    // Rota de usuário autenticado
+// Rotas protegidas
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', function (Request $request) {
         return $request->user();
     });
 
     // Rotas de configurações
-    Route::controller(SettingsController::class)->group(function () {
-        Route::get('/settings', 'getUserSettings');
-        Route::put('/settings/user', 'updateUserSettings');
-        Route::put('/settings/company', 'updateCompanySettings');
+    Route::prefix('/settings')->group(function () {
+        Route::get('/', [SettingsController::class, 'getUserSettings']);
+        Route::put('/user', [SettingsController::class, 'updateUserSettings']);
+        Route::put('/company', [SettingsController::class, 'updateCompanySettings']);
     });
-    
+
     // Rotas de empresa
-    Route::controller(CompanyController::class)->group(function () {
-        Route::put('/companies/{company}', 'update');
-    });
+    Route::put('companies/{company}', [CompanyController::class, 'update']);
 });

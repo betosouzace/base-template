@@ -11,19 +11,33 @@ class AuthenticatedSessionController extends Controller
 {
     public function store(LoginRequest $request)
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
 
-        $user = $request->user();
-        $token = $user->createToken('auth-token')->plainTextToken;
+            $request->session()->regenerate();
 
-        return response()->json([
-            'token' => $token,
-            'user' => $user
-        ]);
+            $user = $request->user();
+            
+            // Revoga tokens anteriores e cria um novo
+            $user->tokens()->delete();
+            $token = $user->createToken('auth-token')->plainTextToken;
+
+            return response()->json([
+                'token' => $token,
+                'user' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Credenciais inválidas'], 401);
+        }
     }
 
     public function destroy(Request $request)
     {
+        // Revoga o token atual
+        if ($request->user()) {
+            $request->user()->currentAccessToken()->delete();
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

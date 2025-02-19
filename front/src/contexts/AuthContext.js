@@ -32,42 +32,32 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (email, password, remember = false) => {
+  const login = async (credentials) => {
     try {
-      const response = await api.post('/login', { 
-        email, 
-        password,
-        remember 
-      });
+      const response = await api.post('login', credentials);
       const { token, user } = response.data;
       
-      if (remember) {
-        localStorage.setItem('token', token);
-      } else {
-        sessionStorage.setItem('token', token);
-      }
-      
+      localStorage.setItem('token', token);
       setUser(user);
       setIsAuthenticated(true);
-
-      const redirectUrl = searchParams.get('redirectUrl');
-      if (redirectUrl) {
-        router.push(decodeURIComponent(redirectUrl));
-      } else {
-        router.push('/home');
-      }
       
       return true;
     } catch (error) {
+      console.error('Erro no login:', error);
       return false;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      await api.post('logout');
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    } finally {
+      localStorage.removeItem('token');
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   };
 
   return (
