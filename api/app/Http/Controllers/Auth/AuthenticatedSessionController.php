@@ -43,6 +43,6 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->noContent();
+        return response()->json(['message' => 'Logout realizado com sucesso']);
     }
 }

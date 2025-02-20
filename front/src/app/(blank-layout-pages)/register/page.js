@@ -53,7 +53,7 @@ const RegisterPage = () => {
 
     setApiLoading(true);
     try {
-      const response = await api.post('/api/register', {
+      const response = await api.post('/auth/register', {
         name,
         email,
         password,

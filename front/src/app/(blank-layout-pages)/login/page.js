@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
-  const router = useRouter();
   const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");

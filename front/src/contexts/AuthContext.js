@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
-        const response = await api.get('/me');
+        const response = await api.get('/auth/me');
         setUser(response.data);
         setIsAuthenticated(true);
       }
@@ -38,20 +38,15 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      const response = await api.post('/login', credentials);
+      const response = await api.post('/auth/login', credentials);
       const { token, user } = response.data;
-      
-      if (credentials.remember) {
-        localStorage.setItem('token', token);
-        sessionStorage.removeItem('token');
-      } else {
-        sessionStorage.setItem('token', token);
-        localStorage.removeItem('token');
-      }
-      
+
+      localStorage.setItem('token', token);
+      sessionStorage.removeItem('token');
+
       setUser(user);
       setIsAuthenticated(true);
-      
+
       return true;
     } catch (error) {
       console.error('Erro no login:', error);
@@ -63,7 +58,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await api.post('/logout');
+      await api.post('/auth/logout');
     } catch (error) {
       console.error('Erro no logout:', error);
     } finally {

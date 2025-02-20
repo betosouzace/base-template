@@ -49,7 +49,7 @@ const SettingsPage = () => {
 
   const loadSettings = async () => {
     try {
-      const response = await api.get('settings');
+      const response = await api.get('/settings');
       const { user_settings, company_settings } = response.data;
       
       setFormData({
