@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->unsignedTinyInteger('wizard_step')->nullable();
             $table->boolean('wizard_completed')->default(false);
-            $table->json('settings')->nullable();
         });
 
         Schema::table('companies', function (Blueprint $table) {
@@ -30,7 +29,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['wizard_step', 'wizard_completed', 'settings']);
+            $table->dropColumn(['wizard_step', 'wizard_completed']);
         });
 
         Schema::table('companies', function (Blueprint $table) {
