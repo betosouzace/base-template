@@ -34,17 +34,22 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      const response = await api.post('login', credentials);
+      const response = await api.post('/login', credentials);
       const { token, user } = response.data;
       
-      localStorage.setItem('token', token);
+      if (credentials.remember) {
+        localStorage.setItem('token', token);
+      } else {
+        sessionStorage.setItem('token', token);
+      }
+      
       setUser(user);
       setIsAuthenticated(true);
       
       return true;
     } catch (error) {
       console.error('Erro no login:', error);
-      return false;
+      throw error;
     }
   };
 
