@@ -11,7 +11,7 @@ class WizardController extends Controller
     public function checkWizardStatus(Request $request)
     {
         $user = $request->user();
-        
+
         return response()->json([
             'needs_wizard' => !$user->company_id,
             'current_step' => $user->wizard_step ?? 1,
@@ -111,4 +111,4 @@ class WizardController extends Controller
             'current_step' => $user->wizard_step
         ]);
     }
-} 
+}
