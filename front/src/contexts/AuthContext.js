@@ -69,6 +69,23 @@ export function AuthProvider({ children }) {
     }
   };
 
+  useEffect(() => {
+    const checkWizard = async () => {
+      if (user && !location.pathname.includes('/wizard')) {
+        try {
+          const response = await api.get('/wizard/status');
+          if (response.data.needs_wizard) {
+            router.push('/wizard');
+          }
+        } catch (error) {
+          console.error('Erro ao verificar wizard:', error);
+        }
+      }
+    };
+
+    checkWizard();
+  }, [user]);
+
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
       {children}
