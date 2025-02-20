@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
-        const response = await api.get('/auth/me');
+        const response = await api.get('/me');
         setUser(response.data);
         setIsAuthenticated(true);
       }
@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      const response = await api.post('/auth/login', credentials);
+      const response = await api.post('/login', credentials);
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post('/logout');
     } catch (error) {
       console.error('Erro no logout:', error);
     } finally {

@@ -5,4 +5,4 @@ globs: *.php, *.js, *.jsx
 
 # Your rule content
 
-- Não existem prefixos na API como por exemplo api/ ou api/auth/
+- Não existem prefixos na API como por exemplo api/ ou api/

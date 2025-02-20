@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const Login = () => {
   const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -44,24 +45,15 @@ const Login = () => {
           remember: rememberMe
         };
         
-        const loginSuccess = await login(credentials);
-        if (loginSuccess) {
-          setSuccess(true);
-          setErrors({});
-          setTimeout(() => {
-            window.location.href = '/home';
-          }, 1500);
-        } else {
-          setErrors(prev => ({
-            ...prev,
-            api: "Credenciais inválidas"
-          }));
-        }
+        await login(credentials);
+        setSuccess(true);
+        setErrors({});
+        
+        router.push('/home');
       } catch (error) {
-        setErrors(prev => ({
-          ...prev,
-          api: error.message || "Erro ao realizar login"
-        }));
+        setErrors({
+          api: error.response?.data?.error || "Erro ao realizar login"
+        });
       } finally {
         setApiLoading(false);
       }

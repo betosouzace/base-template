@@ -59,7 +59,11 @@ class SettingsController extends Controller
             'settings.smtpServer' => 'nullable|string',
             'settings.senderEmail' => 'nullable|email',
             'settings.whatsappKey' => 'nullable|string',
-            'settings.telegramToken' => 'nullable|string'
+            'settings.telegramToken' => 'nullable|string',
+            'name' => 'sometimes|required|string|max:255',
+            'document' => 'sometimes|required|string|max:20',
+            'email' => 'sometimes|required|email|max:255',
+            'phone' => 'sometimes|required|string|max:20'
         ]);
 
         $user = $request->user();
@@ -71,12 +75,20 @@ class SettingsController extends Controller
             ], 403);
         }
 
+        // Atualiza configurações
         $company->settings = array_merge($company->settings ?? [], $request->settings);
+        
+        // Atualiza campos básicos se fornecidos
+        if ($request->has('name')) $company->name = $request->name;
+        if ($request->has('document')) $company->document = $request->document;
+        if ($request->has('email')) $company->email = $request->email;
+        if ($request->has('phone')) $company->phone = $request->phone;
+        
         $company->save();
 
         return response()->json([
             'message' => 'Configurações da empresa atualizadas com sucesso',
-            'settings' => $company->settings
+            'company' => $company
         ]);
     }
 } 

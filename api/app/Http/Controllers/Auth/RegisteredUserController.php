@@ -20,6 +20,8 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::setDefaultDriver('null');
+        
         \Log::info('Dados recebidos:', $request->all());
         
         try {
@@ -37,12 +39,14 @@ class RegisteredUserController extends Controller
 
             event(new Registered($user));
 
-            Auth::login($user);
+            // Cria o token ao invés de fazer login
+            $token = $user->createToken('auth-token')->plainTextToken;
 
             \Log::info('Usuário registrado com sucesso');
             return response()->json([
                 'message' => 'Registro realizado com sucesso',
-                'user' => $user
+                'user' => $user,
+                'token' => $token
             ], 201);
         } catch (\Exception $e) {
             \Log::error('Erro no registro:', ['error' => $e->getMessage()]);

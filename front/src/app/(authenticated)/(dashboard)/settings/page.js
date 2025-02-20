@@ -101,11 +101,7 @@ const SettingsPage = () => {
       // Atualiza configurações da empresa se o usuário estiver vinculado a uma
       if (user.company_id) {
         await api.put('settings/company', {
-          settings: formData.company.settings
-        });
-
-        // Atualiza dados básicos da empresa
-        await api.put(`companies/${user.company_id}`, {
+          settings: formData.company.settings,
           name: formData.company.name,
           document: formData.company.document,
           email: formData.company.email,
@@ -115,6 +111,7 @@ const SettingsPage = () => {
 
       toast.success('Configurações salvas com sucesso!');
     } catch (error) {
+      console.error('Erro ao salvar:', error);
       toast.error('Erro ao salvar configurações');
     }
   };
@@ -195,7 +192,7 @@ const SettingsPage = () => {
                     </label>
                     <input
                       type="text"
-                      value={formData.company.name}
+                      value={formData.company.name || ''}
                       onChange={(e) => handleInputChange('company', 'name', e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
                       required
@@ -207,14 +204,35 @@ const SettingsPage = () => {
                     </label>
                     <input
                       type="text"
-                      value={formData.company.document}
+                      value={formData.company.document || ''}
                       onChange={(e) => handleInputChange('company', 'document', e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
                       required
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.company.email || ''}
+                      onChange={(e) => handleInputChange('company', 'email', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Telefone
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.company.phone || ''}
+                      onChange={(e) => handleInputChange('company', 'phone', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  </div>
                 </div>
-                {/* Adicione mais campos conforme necessário */}
               </div>
             )}
 
