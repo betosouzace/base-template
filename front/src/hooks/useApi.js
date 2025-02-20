@@ -16,15 +16,24 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
+      // Limpa ambos os storages em caso de erro de autenticação
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
-      window.location.href = '/login';
+      
+      // Redireciona apenas se não estiver já na página de login
+      if (!window.location.pathname.includes('/login')) {
+        const currentPath = encodeURIComponent(window.location.pathname);
+        // window.location.href = `/login?redirectUrl=${currentPath}`;
+        router.push('/login?redirectUrl=${currentPath}');
+      }
     }
     return Promise.reject(error);
   }

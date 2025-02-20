@@ -19,14 +19,18 @@ export function AuthProvider({ children }) {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         const response = await api.get('/me');
         setUser(response.data);
         setIsAuthenticated(true);
       }
     } catch (error) {
+      console.error('Erro ao verificar autenticação:', error);
       localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -39,8 +43,10 @@ export function AuthProvider({ children }) {
       
       if (credentials.remember) {
         localStorage.setItem('token', token);
+        sessionStorage.removeItem('token');
       } else {
         sessionStorage.setItem('token', token);
+        localStorage.removeItem('token');
       }
       
       setUser(user);
@@ -49,17 +55,20 @@ export function AuthProvider({ children }) {
       return true;
     } catch (error) {
       console.error('Erro no login:', error);
+      setIsAuthenticated(false);
+      setUser(null);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await api.post('logout');
+      await api.post('/logout');
     } catch (error) {
       console.error('Erro no logout:', error);
     } finally {
       localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
     }

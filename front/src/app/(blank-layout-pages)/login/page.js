@@ -50,7 +50,7 @@ const Login = () => {
           setSuccess(true);
           setErrors({});
           setTimeout(() => {
-            router.push('/home');
+            window.location.href = '/home';
           }, 1500);
         } else {
           setErrors(prev => ({
