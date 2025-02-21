@@ -118,20 +118,22 @@ export function SettingsProvider({ children }) {
     }
   };
 
-  const updateUserSettings = async (userSettings) => {
+  const updateUserSettings = async (newSettings) => {
     try {
-      await api.put('settings/user', {
-        settings: userSettings
+      // Atualiza configurações do usuário usando PUT
+      const response = await api.put('settings/user', {
+        settings: newSettings.user.settings
       });
 
       setSettings(prev => ({
         ...prev,
         user: {
-          settings: userSettings
+          ...prev.user,
+          settings: response.data.settings
         }
       }));
 
-      toast.success('Configurações do usuário atualizadas com sucesso!');
+      toast.success('Configurações do usuário atualizadas com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar configurações do usuário:', error);
       toast.error('Erro ao atualizar configurações do usuário');
@@ -139,31 +141,29 @@ export function SettingsProvider({ children }) {
     }
   };
 
-  const updateCompanySettings = async (companyData, files = null) => {
+  const updateCompanySettings = async (newSettings) => {
     try {
-      let response;
-      
-      if (files) {
-        const formData = new FormData();
-        formData.append('settings', JSON.stringify(companyData.settings));
-        formData.append('name', companyData.name);
-        formData.append('document', companyData.document);
-        formData.append('email', companyData.email);
-        formData.append('phone', companyData.phone);
-        
-        if (files.logo) formData.append('logo', files.logo);
-        if (files.icon) formData.append('icon', files.icon);
-        if (files.favicon) formData.append('favicon', files.favicon);
-        
-        response = await api.post('settings/company', formData);
-      } else {
-        response = await api.post('settings/company', companyData);
-      }
+      // Atualiza configurações da empresa usando PUT
+      const response = await api.put('settings/company', {
+        settings: JSON.stringify(newSettings.company.settings), // Converte para JSON string conforme esperado pela API
+        name: newSettings.company.name,
+        document: newSettings.company.document,
+        email: newSettings.company.email,
+        phone: newSettings.company.phone
+      });
 
-      await loadSettings(); // Recarrega as configurações após atualizar
-      return response.data;
+      setSettings(prev => ({
+        ...prev,
+        company: {
+          ...prev.company,
+          ...response.data.company
+        }
+      }));
+
+      toast.success('Configurações da empresa atualizadas com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar configurações da empresa:', error);
+      toast.error('Erro ao atualizar configurações da empresa');
       throw error;
     }
   };

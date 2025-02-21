@@ -12,7 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useSettings } from '@/contexts/SettingsContext';
 
 const SettingsPage = () => {
-  const { settings, loading, updateCompanySettings, updateCompanyBranding, loadSettings } = useSettings();
+  const { settings, loading, updateCompanySettings, updateUserSettings, updateCompanyBranding, loadSettings } = useSettings();
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const api = useApi();
@@ -163,21 +163,17 @@ const SettingsPage = () => {
   const handleSave = async () => {
     try {
       setIsLoading(true);
-
-      // Primeiro, salva as configurações gerais
+      
+      // Atualiza configurações da empresa
       await updateCompanySettings(formData);
-
-      // Se houver arquivos, faz o upload
-      if (logoFile || iconFile || faviconFile) {
-        const files = {
-          logo: logoFile,
-          icon: iconFile,
-          favicon: faviconFile
-        };
-        await updateCompanyBranding(files);
-      }
-
-      toast.success('Configurações salvas com sucesso');
+      
+      // Atualiza configurações do usuário
+      await updateUserSettings(formData);
+      
+      // Recarrega as configurações
+      await loadSettings();
+      
+      toast.success('Configurações salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
       toast.error('Erro ao salvar configurações');
