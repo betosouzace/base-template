@@ -57,13 +57,16 @@ export function CompanyLogo({
     }
 
     return (
-      <div style={{ width, height }} className={`relative ${className}`}>
+      <div style={{ width, height }} className={`relative flex items-center ${className}`}>
         <Image
           src={fullUrl}
           alt={`${type} preview`}
-          fill
+          width={width}
+          height={height}
           style={{ objectFit: 'contain' }}
           onError={() => renderDefault()}
+          unoptimized={true}
+          className={`${className} object-contain`}
         />
       </div>
     );

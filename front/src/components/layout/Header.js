@@ -82,7 +82,7 @@ const Header = ({ searchQuery, setSearchQuery, toggleSidebar, isOpen, isMobile }
           <div className="hidden md:block">
             <CompanyLogo
               logoUrl={branding?.logo}
-              className="w-auto h-14"
+              className="w-auto !h-12"
             />
           </div>
         </div>

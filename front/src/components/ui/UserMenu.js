@@ -63,8 +63,9 @@ const UserMenu = ({ show, setShow, setShowNotifications }) => {
         <svg 
           width="32" 
           height="32" 
-          className="rounded-full bg-blue-500"
+          className="rounded-full"
           viewBox="0 0 32 32"
+          style={{ backgroundColor: 'var(--primary-color)' }}
         >
           <text 
             x="50%" 
@@ -75,7 +76,7 @@ const UserMenu = ({ show, setShow, setShowNotifications }) => {
             fontSize="14"
             fontWeight="500"
           >
-            {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+            {user?.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U'}
           </text>
         </svg>
         <div className="hidden md:block">

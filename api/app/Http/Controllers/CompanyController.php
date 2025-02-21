@@ -82,18 +82,12 @@ class CompanyController extends Controller
             ]);
         }
 
-        // Função helper para gerar URL completa
-        $getFullUrl = function($path) {
-            if (!$path) return null;
-            return url('storage/' . $path);
-        };
-
         return response()->json([
             'theme' => $company->settings['theme'] ?? $defaultTheme,
             'branding' => [
-                'logo' => $getFullUrl($company->logo),
-                'icon' => $getFullUrl($company->icon),
-                'favicon' => $getFullUrl($company->favicon),
+                'logo' => $company->logo,
+                'icon' => $company->icon,
+                'favicon' => $company->favicon,
                 'name' => $company->name
             ]
         ]);

@@ -151,36 +151,53 @@ const Login = () => {
         )}
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="rounded-md shadow-sm space-y-6">
             <div>
-              <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="email">Email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="email">
+                Email
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaEnvelope className={`h-5 w-5 ${theme === 'dark' ? "text-gray-400" : "text-gray-500"}`} />
+                  <FaEnvelope className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   type="email"
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                  className={`appearance-none block w-full pl-10 pr-3 py-2 border ${
+                    errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } rounded-md shadow-sm placeholder-gray-400 
+                  focus:outline-none focus:ring-primary focus:border-primary
+                  dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-400
+                  text-sm`}
+                  placeholder="seu@email.com"
                   required
                 />
               </div>
-              {errors.email && <p className="text-red-500 text-xs italic">{errors.email}</p>}
+              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
             </div>
+
             <div>
-              <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="password">Password</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="password">
+                Senha
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaLock className={`h-5 w-5 ${theme === 'dark' ? "text-gray-400" : "text-gray-500"}`} />
+                  <FaLock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`appearance-none rounded-md relative block w-full pl-10 pr-10 px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                  className={`appearance-none block w-full pl-10 pr-10 py-2 border ${
+                    errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } rounded-md shadow-sm placeholder-gray-400 
+                  focus:outline-none focus:ring-primary focus:border-primary
+                  dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-400
+                  text-sm`}
+                  placeholder="••••••••"
                   required
                 />
                 <button
@@ -189,34 +206,34 @@ const Login = () => {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <FaEyeSlash className={`h-5 w-5 ${theme === 'dark' ? "text-gray-400" : "text-gray-500"} hover:text-gray-600`} />
+                    <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
                   ) : (
-                    <FaEye className={`h-5 w-5 ${theme === 'dark' ? "text-gray-400" : "text-gray-500"} hover:text-gray-600`} />
+                    <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
                   )}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-xs italic">{errors.password}</p>}
+              {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password}</p>}
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-6">
             <div className="flex items-center">
               <input
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
               />
-              <label htmlFor="remember-me" className={`ml-2 block text-sm ${theme === 'dark' ? "text-gray-300" : "text-gray-900"}`}>
-                Remember me
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                Lembrar-me
               </label>
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                Forgot your password?
+              <a href="#" className="font-medium text-primary hover:text-primary-hover">
+                Esqueceu sua senha?
               </a>
             </div>
           </div>
