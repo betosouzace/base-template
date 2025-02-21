@@ -10,26 +10,25 @@ import { useApi } from '@/hooks/useApi';
 import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import { useSettings } from '@/contexts/SettingsContext';
-import { ChromePicker } from 'react-color';
 
 const SettingsPage = () => {
-  const { settings, loading, updateSettings, loadSettings, updateCompanyBranding } = useSettings();
+  const { settings, loading, updateCompanySettings, updateCompanyBranding } = useSettings();
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const api = useApi();
   const [activeTab, setActiveTab] = useState("company");
   const [formData, setFormData] = useState({
     company: {
-      name: "",
-      document: "",
-      email: "",
-      phone: "",
+      name: '',
+      document: '',
+      email: '',
+      phone: '',
       settings: {
         theme: {
-          primaryColor: "#4F46E5",
-          primaryColorHover: "#4338CA",
-          primaryColorLight: "#818CF8",
-          primaryColorDark: "#3730A3",
+          primaryColor: '',
+          primaryColorHover: '',
+          primaryColorLight: '',
+          primaryColorDark: ''
         }
       }
     }
@@ -40,6 +39,10 @@ const SettingsPage = () => {
     primaryColorLight: false,
     primaryColorDark: false
   });
+  const [logoFile, setLogoFile] = useState(null);
+  const [iconFile, setIconFile] = useState(null);
+  const [faviconFile, setFaviconFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && !settings?.company) {
@@ -51,19 +54,11 @@ const SettingsPage = () => {
     if (settings?.company) {
       setFormData({
         company: {
-          name: settings.company.name || "",
-          document: settings.company.document || "",
-          email: settings.company.email || "",
-          phone: settings.company.phone || "",
-          settings: {
-            theme: settings.company.settings?.theme || {
-              primaryColor: "#4F46E5",
-              primaryColorHover: "#4338CA",
-              primaryColorLight: "#818CF8",
-              primaryColorDark: "#3730A3",
-            },
-            ...(settings.company.settings || {})
-          }
+          name: settings.company.name,
+          document: settings.company.document,
+          email: settings.company.email,
+          phone: settings.company.phone,
+          settings: settings.company.settings
         },
         user: {
           settings: settings.user.settings || {}
@@ -95,11 +90,64 @@ const SettingsPage = () => {
     }));
   };
 
+  const handleFileChange = (event, type) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    switch (type) {
+      case 'logo':
+        setLogoFile(file);
+        break;
+      case 'icon':
+        setIconFile(file);
+        break;
+      case 'favicon':
+        setFaviconFile(file);
+        break;
+    }
+  };
+
+  const handleColorChange = (color, field) => {
+    const newTheme = {
+      ...formData.company.settings.theme,
+      [field]: color
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      company: {
+        ...prev.company,
+        settings: {
+          ...prev.company.settings,
+          theme: newTheme
+        }
+      }
+    }));
+  };
+
   const handleSave = async () => {
     try {
-      await updateSettings(formData);
+      setIsLoading(true);
+
+      // Primeiro, salva as configurações gerais
+      await updateCompanySettings(formData);
+
+      // Se houver arquivos, faz o upload
+      if (logoFile || iconFile || faviconFile) {
+        const files = {
+          logo: logoFile,
+          icon: iconFile,
+          favicon: faviconFile
+        };
+        await updateCompanyBranding(files);
+      }
+
+      toast.success('Configurações salvas com sucesso');
     } catch (error) {
-      // Erro já tratado no contexto
+      console.error('Erro ao salvar configurações:', error);
+      toast.error('Erro ao salvar configurações');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -108,29 +156,6 @@ const SettingsPage = () => {
       loadSettings();
       toast.info("Configurações resetadas para o padrão");
     }
-  };
-
-  const handleFileChange = async (event, type) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    try {
-      await updateCompanyBranding({
-        [type]: file
-      });
-    } catch (error) {
-      // Erro já tratado no contexto
-    }
-  };
-
-  const handleColorChange = (color, field) => {
-    handleSettingsChange('company', 'settings', {
-      ...formData.company.settings,
-      theme: {
-        ...formData.company.settings.theme,
-        [field]: color.hex
-      }
-    });
   };
 
   const tabs = [
@@ -142,96 +167,55 @@ const SettingsPage = () => {
   ];
 
   const renderBrandingSection = () => {
-    const theme = formData?.company?.settings?.theme ?? {
+    const theme = formData.company.settings.theme || {
       primaryColor: "#4F46E5",
       primaryColorHover: "#4338CA",
       primaryColorLight: "#818CF8",
-      primaryColorDark: "#3730A3",
+      primaryColorDark: "#3730A3"
     };
 
     return (
       <div className="space-y-6">
-        <h3 className="text-lg font-medium">Personalização da Marca</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Logo Upload */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Logo da Empresa</label>
-            <input
-              type="file"
-              onChange={(e) => handleFileChange(e, 'logo')}
-              accept="image/*"
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-indigo-50 file:text-indigo-700
-                hover:file:bg-indigo-100"
-            />
-          </div>
-
-          {/* Icon Upload */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Ícone</label>
-            <input
-              type="file"
-              onChange={(e) => handleFileChange(e, 'icon')}
-              accept="image/*"
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-indigo-50 file:text-indigo-700
-                hover:file:bg-indigo-100"
-            />
-          </div>
-
-          {/* Favicon Upload */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Favicon</label>
-            <input
-              type="file"
-              onChange={(e) => handleFileChange(e, 'favicon')}
-              accept=".ico,image/x-icon,image/png"
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-indigo-50 file:text-indigo-700
-                hover:file:bg-indigo-100"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h4 className="text-md font-medium">Cores do Tema</h4>
-          
-          {/* Color Pickers */}
-          {['primaryColor', 'primaryColorHover', 'primaryColorLight', 'primaryColorDark'].map((colorKey) => (
-            <div key={colorKey} className="flex items-center space-x-4">
-              <label className="text-sm font-medium w-40">{colorKey}</label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowColorPicker(prev => ({ ...prev, [colorKey]: !prev[colorKey] }))}
-                  className="w-10 h-10 rounded border"
-                  style={{ backgroundColor: theme[colorKey] }}
-                />
-                {showColorPicker[colorKey] && (
-                  <div className="absolute z-10 mt-2">
-                    <div
-                      className="fixed inset-0"
-                      onClick={() => setShowColorPicker(prev => ({ ...prev, [colorKey]: false }))}
-                    />
-                    <ChromePicker
-                      color={theme[colorKey]}
-                      onChange={(color) => handleColorChange(color, colorKey)}
-                    />
-                  </div>
-                )}
-              </div>
+        <div>
+          <h3 className="text-lg font-medium">Cores da Marca</h3>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Cor Primária</label>
+              <input
+                type="color"
+                value={theme.primaryColor}
+                onChange={(e) => handleColorChange(e.target.value, 'primaryColor')}
+                className="w-full h-10 p-1 rounded border"
+              />
             </div>
-          ))}
+            <div>
+              <label className="block text-sm font-medium mb-1">Cor Hover</label>
+              <input
+                type="color"
+                value={theme.primaryColorHover}
+                onChange={(e) => handleColorChange(e.target.value, 'primaryColorHover')}
+                className="w-full h-10 p-1 rounded border"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Cor Clara</label>
+              <input
+                type="color"
+                value={theme.primaryColorLight}
+                onChange={(e) => handleColorChange(e.target.value, 'primaryColorLight')}
+                className="w-full h-10 p-1 rounded border"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Cor Escura</label>
+              <input
+                type="color"
+                value={theme.primaryColorDark}
+                onChange={(e) => handleColorChange(e.target.value, 'primaryColorDark')}
+                className="w-full h-10 p-1 rounded border"
+              />
+            </div>
+          </div>
         </div>
       </div>
     );

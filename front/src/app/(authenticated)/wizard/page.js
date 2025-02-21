@@ -12,6 +12,7 @@ const WizardPage = () => {
   const { settings, updateSettings, loadSettings } = useSettings();
   const { user, updateUserAfterWizard } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Usar useEffect para atualizar formData quando settings mudar
   const [formData, setFormData] = useState({
@@ -147,6 +148,8 @@ const WizardPage = () => {
 
   const handleFinish = async () => {
     try {
+      setIsLoading(true);
+
       // Valida os dados obrigatórios
       if (!formData.name || !formData.document || !formData.email || !formData.phone) {
         toast.error('Por favor, preencha todos os campos obrigatórios');
@@ -194,8 +197,8 @@ const WizardPage = () => {
       // Recarrega as configurações para atualizar o contexto
       await loadSettings();
       
-      // Redireciona para o dashboard
-      router.replace('/dashboard');
+      // Redireciona para /home ao invés de /dashboard
+      router.replace('/home');
       
       toast.success('Configuração inicial concluída com sucesso!');
     } catch (error) {
@@ -208,6 +211,8 @@ const WizardPage = () => {
       } else {
         toast.error('Erro ao finalizar wizard');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -444,12 +449,22 @@ const WizardPage = () => {
 
           {renderStep()}
 
-          <div className="mt-8 flex justify-end">
+          <div className="flex justify-end mt-6">
             <button
               onClick={handleNext}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={isLoading}
+              className={`px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              {currentStep === 4 ? 'Concluir' : 'Próximo'}
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Processando...
+                </>
+              ) : (
+                currentStep === 4 ? 'Finalizar' : 'Próximo'
+              )}
             </button>
           </div>
         </div>

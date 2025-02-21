@@ -5,45 +5,54 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Company;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
     public function getUserSettings(Request $request)
     {
-        $user = $request->user();
-        $company = $user->company;
-        
-        return response()->json([
-            'user_settings' => $user->settings ?? [
-                'theme' => 'light',
-                'density' => 'normal',
-                'highContrast' => false,
-                'fontSize' => 'medium'
-            ],
-            'company_settings' => $company?->settings ?? [
-                'paymentMethods' => [],
-                'currency' => 'BRL',
-                'smtpServer' => '',
-                'senderEmail' => '',
-                'whatsappKey' => '',
-                'telegramToken' => '',
-                'theme' => [
-                    'primaryColor' => '#4F46E5',
-                    'primaryColorHover' => '#4338CA',
-                    'primaryColorLight' => '#818CF8',
-                    'primaryColorDark' => '#3730A3',
-                ]
-            ],
-            'company' => $company ? [
-                'name' => $company->name,
-                'document' => $company->document,
-                'email' => $company->email,
-                'phone' => $company->phone,
-                'logo' => $company->logo,
-                'icon' => $company->icon,
-                'favicon' => $company->favicon,
-            ] : null
-        ]);
+        try {
+            $user = $request->user();
+            $company = $user->company;
+            
+            return response()->json([
+                'user_settings' => $user->settings ?? [
+                    'theme' => 'light',
+                    'density' => 'normal',
+                    'highContrast' => false,
+                    'fontSize' => 'medium'
+                ],
+                'company_settings' => $company?->settings ?? [
+                    'paymentMethods' => [],
+                    'currency' => 'BRL',
+                    'smtpServer' => '',
+                    'senderEmail' => '',
+                    'whatsappKey' => '',
+                    'telegramToken' => '',
+                    'theme' => [
+                        'primaryColor' => '#4F46E5',
+                        'primaryColorHover' => '#4338CA',
+                        'primaryColorLight' => '#818CF8',
+                        'primaryColorDark' => '#3730A3',
+                    ]
+                ],
+                'company' => $company ? [
+                    'name' => $company->name,
+                    'document' => $company->document,
+                    'email' => $company->email,
+                    'phone' => $company->phone,
+                    'logo' => $company->logo,
+                    'icon' => $company->icon,
+                    'favicon' => $company->favicon,
+                ] : null
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao carregar configurações: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erro ao carregar configurações',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function updateUserSettings(Request $request)
@@ -69,23 +78,14 @@ class SettingsController extends Controller
     public function updateCompanySettings(Request $request)
     {
         $request->validate([
-            'settings' => 'required|array',
-            'settings.paymentMethods' => 'nullable|array',
-            'settings.paymentMethods.*' => 'string',
-            'settings.currency' => 'nullable|string|size:3',
-            'settings.smtpServer' => 'nullable|string',
-            'settings.senderEmail' => 'nullable|email',
-            'settings.whatsappKey' => 'nullable|string',
-            'settings.telegramToken' => 'nullable|string',
-            'settings.theme' => 'nullable|array',
-            'settings.theme.primaryColor' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'settings.theme.primaryColorHover' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'settings.theme.primaryColorLight' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'settings.theme.primaryColorDark' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'name' => 'sometimes|required|string|max:255',
-            'document' => 'sometimes|required|string|max:20',
-            'email' => 'sometimes|required|email|max:255',
-            'phone' => 'sometimes|required|string|max:20'
+            'settings' => 'required|json',
+            'name' => 'required|string|max:255',
+            'document' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:20',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+            'favicon' => 'nullable|image|mimes:ico,png|max:100'
         ]);
 
         $user = $request->user();
@@ -93,24 +93,47 @@ class SettingsController extends Controller
 
         if (!$company) {
             return response()->json([
-                'message' => 'Usuário não está vinculado a uma empresa'
-            ], 403);
+                'message' => 'Empresa não encontrada'
+            ], 404);
         }
 
-        // Atualiza configurações
-        $company->settings = array_merge($company->settings ?? [], $request->settings);
-        
-        // Atualiza campos básicos se fornecidos
-        if ($request->has('name')) $company->name = $request->name;
-        if ($request->has('document')) $company->document = $request->document;
-        if ($request->has('email')) $company->email = $request->email;
-        if ($request->has('phone')) $company->phone = $request->phone;
-        
-        $company->save();
+        // Decodifica as configurações do JSON
+        $settings = json_decode($request->settings, true);
+
+        // Processa e salva os arquivos
+        $paths = [];
+        foreach (['logo', 'icon', 'favicon'] as $type) {
+            if ($request->hasFile($type)) {
+                if ($company->$type) {
+                    Storage::disk('public')->delete($company->$type);
+                }
+                $path = $request->file($type)->store('company/' . $company->id, 'public');
+                $paths[$type] = $path;
+            }
+        }
+
+        // Atualiza os dados da empresa
+        $company->update([
+            'name' => $request->name,
+            'document' => $request->document,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'settings' => $settings,
+            ...$paths // Adiciona os caminhos dos arquivos se existirem
+        ]);
 
         return response()->json([
             'message' => 'Configurações da empresa atualizadas com sucesso',
-            'company' => $company
+            'company' => [
+                'name' => $company->name,
+                'document' => $company->document,
+                'email' => $company->email,
+                'phone' => $company->phone,
+                'settings' => $company->settings,
+                'logo' => $company->logo,
+                'icon' => $company->icon,
+                'favicon' => $company->favicon
+            ]
         ]);
     }
 

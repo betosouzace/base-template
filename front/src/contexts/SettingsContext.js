@@ -46,9 +46,21 @@ export function SettingsProvider({ children }) {
   });
 
   useEffect(() => {
-    if (user) {
-      loadSettings();
-    }
+    const initializeSettings = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        await loadSettings();
+      } catch (error) {
+        console.error('Erro ao inicializar configurações:', error);
+        setLoading(false);
+      }
+    };
+
+    initializeSettings();
   }, [user]);
 
   const loadSettings = async () => {
@@ -57,76 +69,42 @@ export function SettingsProvider({ children }) {
       const response = await api.get('settings/user');
       const { user_settings, company_settings, company } = response.data;
       
-      if (!company) {
-        setSettings({
-          company: {
-            name: "",
-            document: "",
-            email: "",
-            phone: "",
-            logo: null,
-            icon: null,
-            favicon: null,
-            settings: {
-              theme: {
-                primaryColor: "#4F46E5",
-                primaryColorHover: "#4338CA",
-                primaryColorLight: "#818CF8",
-                primaryColorDark: "#3730A3"
-              },
-              paymentMethods: [],
-              currency: "BRL",
-              smtpServer: "",
-              senderEmail: "",
-              whatsappKey: "",
-              telegramToken: ""
-            }
-          },
-          user: {
-            settings: user_settings || {
-              theme: "light",
-              density: "normal",
-              highContrast: false,
-              fontSize: "medium"
+      setSettings({
+        user: {
+          settings: user_settings || {
+            theme: "light",
+            density: "normal",
+            highContrast: false,
+            fontSize: "medium"
+          }
+        },
+        company: {
+          name: company?.name || '',
+          document: company?.document || '',
+          email: company?.email || '',
+          phone: company?.phone || '',
+          logo: company?.logo || null,
+          icon: company?.icon || null,
+          favicon: company?.favicon || null,
+          settings: company_settings || {
+            paymentMethods: [],
+            currency: 'BRL',
+            smtpServer: '',
+            senderEmail: '',
+            whatsappKey: '',
+            telegramToken: '',
+            theme: {
+              primaryColor: '#4F46E5',
+              primaryColorHover: '#4338CA',
+              primaryColorLight: '#818CF8',
+              primaryColorDark: '#3730A3'
             }
           }
-        });
-      } else {
-        setSettings({
-          company: {
-            name: company.name,
-            document: company.document,
-            email: company.email,
-            phone: company.phone,
-            logo: company.logo,
-            icon: company.icon,
-            favicon: company.favicon,
-            settings: {
-              ...company_settings,
-              theme: {
-                primaryColor: "#4F46E5",
-                primaryColorHover: "#4338CA",
-                primaryColorLight: "#818CF8",
-                primaryColorDark: "#3730A3",
-                ...(company_settings?.theme || {})
-              }
-            }
-          },
-          user: {
-            settings: user_settings || {
-              theme: "light",
-              density: "normal",
-              highContrast: false,
-              fontSize: "medium"
-            }
-          }
-        });
-      }
+        }
+      });
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
-      if (error.response?.status !== 401) {
-        toast.error('Erro ao carregar configurações');
-      }
+      toast.error('Erro ao carregar configurações');
     } finally {
       setLoading(false);
     }
@@ -180,22 +158,31 @@ export function SettingsProvider({ children }) {
     }
   };
 
-  const updateCompanySettings = async (companyData) => {
+  const updateCompanySettings = async (companyData, files = null) => {
     try {
-      await api.put('settings/company', companyData);
+      let response;
+      
+      if (files) {
+        const formData = new FormData();
+        formData.append('settings', JSON.stringify(companyData.settings));
+        formData.append('name', companyData.name);
+        formData.append('document', companyData.document);
+        formData.append('email', companyData.email);
+        formData.append('phone', companyData.phone);
+        
+        if (files.logo) formData.append('logo', files.logo);
+        if (files.icon) formData.append('icon', files.icon);
+        if (files.favicon) formData.append('favicon', files.favicon);
+        
+        response = await api.post('settings/company', formData);
+      } else {
+        response = await api.post('settings/company', companyData);
+      }
 
-      setSettings(prev => ({
-        ...prev,
-        company: {
-          ...prev.company,
-          ...companyData
-        }
-      }));
-
-      toast.success('Configurações da empresa atualizadas com sucesso!');
+      await loadSettings(); // Recarrega as configurações após atualizar
+      return response.data;
     } catch (error) {
       console.error('Erro ao atualizar configurações da empresa:', error);
-      toast.error('Erro ao atualizar configurações da empresa');
       throw error;
     }
   };
@@ -267,12 +254,12 @@ export function SettingsProvider({ children }) {
       value={{
         settings,
         loading,
+        loadSettings,
         updateSettings,
         updateUserSettings,
         updateCompanySettings,
         updateCompanyBranding,
-        updateCompanyTheme,
-        loadSettings
+        updateCompanyTheme
       }}
     >
       {children}
