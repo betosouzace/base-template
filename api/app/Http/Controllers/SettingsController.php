@@ -18,6 +18,8 @@ class SettingsController extends Controller
             // Função helper para gerar URL completa
             $getFullUrl = function($path) {
                 if (!$path) return null;
+                // Verifica se já é uma URL completa
+                if (str_starts_with($path, 'http')) return $path;
                 return url('storage/' . $path);
             };
             
@@ -194,6 +196,8 @@ class SettingsController extends Controller
         // Função helper para gerar URL completa
         $getFullUrl = function($path) {
             if (!$path) return null;
+            // Verifica se já é uma URL completa
+            if (str_starts_with($path, 'http')) return $path;
             return url('storage/' . $path);
         };
 
