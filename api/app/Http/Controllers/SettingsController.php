@@ -60,6 +60,11 @@ class SettingsController extends Controller
             'settings.senderEmail' => 'nullable|email',
             'settings.whatsappKey' => 'nullable|string',
             'settings.telegramToken' => 'nullable|string',
+            'settings.theme' => 'nullable|array',
+            'settings.theme.primaryColor' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
+            'settings.theme.primaryColorHover' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
+            'settings.theme.primaryColorLight' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
+            'settings.theme.primaryColorDark' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
             'name' => 'sometimes|required|string|max:255',
             'document' => 'sometimes|required|string|max:20',
             'email' => 'sometimes|required|email|max:255',
@@ -89,6 +94,49 @@ class SettingsController extends Controller
         return response()->json([
             'message' => 'Configurações da empresa atualizadas com sucesso',
             'company' => $company
+        ]);
+    }
+
+    public function updateCompanyBranding(Request $request)
+    {
+        $request->validate([
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+            'favicon' => 'nullable|image|mimes:ico,png|max:100'
+        ]);
+
+        $user = $request->user();
+        $company = $user->company;
+
+        if (!$company) {
+            return response()->json([
+                'message' => 'Usuário não está vinculado a uma empresa'
+            ], 403);
+        }
+
+        $paths = [];
+
+        if ($request->hasFile('logo')) {
+            $paths['logo'] = $request->file('logo')->store('company/logos', 'public');
+        }
+
+        if ($request->hasFile('icon')) {
+            $paths['icon'] = $request->file('icon')->store('company/icons', 'public');
+        }
+
+        if ($request->hasFile('favicon')) {
+            $paths['favicon'] = $request->file('favicon')->store('company/favicons', 'public');
+        }
+
+        foreach ($paths as $key => $path) {
+            $company->$key = $path;
+        }
+
+        $company->save();
+
+        return response()->json([
+            'message' => 'Imagens da empresa atualizadas com sucesso',
+            ...$paths
         ]);
     }
 } 

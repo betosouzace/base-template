@@ -5,9 +5,52 @@
 :root {
   --background: theme('colors.background.light');
   --foreground: theme('colors.foreground.light');
+  --primary-color: #4F46E5;
+  --primary-color-hover: #4338CA;
+  --primary-color-light: #818CF8;
+  --primary-color-dark: #3730A3;
 }
 
 [data-theme='dark'] {
   --background: theme('colors.background.dark');
   --foreground: theme('colors.foreground.dark');
 }
+
+/* Substitua todas as referências de cores fixas por variáveis CSS */
+.bg-indigo-500 {
+  background-color: var(--primary-color) !important;
+}
+
+.bg-indigo-600:hover {
+  background-color: var(--primary-color-hover) !important;
+}
+
+.text-indigo-600 {
+  color: var(--primary-color) !important;
+}
+
+.border-indigo-500 {
+  border-color: var(--primary-color) !important;
+}
+
+.ring-indigo-500 {
+  --tw-ring-color: var(--primary-color) !important;
+}
+
+/* Adicione mais classes conforme necessário */
+
+/* Estilização do formulário de login */
+.login-form {
+  @apply bg-white dark:bg-gray-800;
+  border-color: var(--primary-color-light);
+}
+
+.login-button {
+  background-color: var(--primary-color);
+}
+
+.login-button:hover {
+  background-color: var(--primary-color-hover);
+}
+
+/* ... outros estilos ... */

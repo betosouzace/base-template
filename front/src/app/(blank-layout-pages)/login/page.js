@@ -39,13 +39,7 @@ const Login = () => {
     if (validateForm()) {
       setApiLoading(true);
       try {
-        const credentials = {
-          email,
-          password,
-          remember: rememberMe
-        };
-        
-        await login(credentials);
+        await login(email, password, rememberMe);
         setSuccess(true);
         setErrors({});
         

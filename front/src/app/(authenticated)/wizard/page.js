@@ -1,42 +1,63 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useApi } from '@/hooks/useApi';
+import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
 
 const WizardPage = () => {
   const router = useRouter();
-  const api = useApi();
+  const { settings, updateSettings } = useSettings();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  
+  // Usar useEffect para atualizar formData quando settings mudar
   const [formData, setFormData] = useState({
-    // Etapa 1: Informações básicas
-    name: '',
-    document: '',
-    email: '',
-    phone: '',
-    
-    // Etapa 2: Pagamentos
-    paymentMethods: [],
-    currency: 'BRL',
-    
-    // Etapa 3: Comunicação
-    smtpServer: '',
-    senderEmail: '',
-    whatsappKey: '',
-    telegramToken: '',
-    
-    // Etapa 4: Interface
-    theme: 'light',
-    density: 'normal',
-    fontSize: 'medium',
-    highContrast: false
+    name: settings.company.name,
+    document: settings.company.document,
+    email: settings.company.email,
+    phone: settings.company.phone,
+    paymentMethods: settings.company.settings.paymentMethods,
+    currency: settings.company.settings.currency,
+    smtpServer: settings.company.settings.smtpServer,
+    senderEmail: settings.company.settings.senderEmail,
+    whatsappKey: settings.company.settings.whatsappKey,
+    telegramToken: settings.company.settings.telegramToken,
+    theme: settings.user.settings.theme,
+    density: settings.user.settings.density,
+    fontSize: settings.user.settings.fontSize,
+    highContrast: settings.user.settings.highContrast
   });
+
+  useEffect(() => {
+    setFormData({
+      name: settings.company.name,
+      document: settings.company.document,
+      email: settings.company.email,
+      phone: settings.company.phone,
+      paymentMethods: settings.company.settings.paymentMethods,
+      currency: settings.company.settings.currency,
+      smtpServer: settings.company.settings.smtpServer,
+      senderEmail: settings.company.settings.senderEmail,
+      whatsappKey: settings.company.settings.whatsappKey,
+      telegramToken: settings.company.settings.telegramToken,
+      theme: settings.user.settings.theme,
+      density: settings.user.settings.density,
+      fontSize: settings.user.settings.fontSize,
+      highContrast: settings.user.settings.highContrast
+    });
+  }, [settings]);
 
   useEffect(() => {
     checkWizardStatus();
   }, []);
+
+  useEffect(() => {
+    // Se tiver empresa vinculada, redireciona para o dashboard
+    if (user?.company_id) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const checkWizardStatus = async () => {
     try {
@@ -60,10 +81,32 @@ const WizardPage = () => {
 
   const handleNext = async () => {
     try {
-      await api.post('/wizard/step', {
-        step: currentStep,
-        ...formData
-      });
+      const newSettings = {
+        company: {
+          name: formData.name,
+          document: formData.document,
+          email: formData.email,
+          phone: formData.phone,
+          settings: {
+            paymentMethods: formData.paymentMethods,
+            currency: formData.currency,
+            smtpServer: formData.smtpServer,
+            senderEmail: formData.senderEmail,
+            whatsappKey: formData.whatsappKey,
+            telegramToken: formData.telegramToken,
+          }
+        },
+        user: {
+          settings: {
+            theme: formData.theme,
+            density: formData.density,
+            fontSize: formData.fontSize,
+            highContrast: formData.highContrast
+          }
+        }
+      };
+
+      await updateSettings(newSettings);
       
       if (currentStep === 4) {
         router.push('/settings');

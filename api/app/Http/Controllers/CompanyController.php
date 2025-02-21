@@ -40,4 +40,33 @@ class CompanyController extends Controller
             'company' => $company
         ]);
     }
+
+    public function getTheme(Request $request)
+    {
+        // Pega o domínio da requisição
+        $host = $request->getHost();
+        
+        // Busca a empresa pelo domínio (você precisa adicionar uma coluna domain na tabela companies)
+        $company = Company::where('domain', $host)->first();
+        
+        if (!$company) {
+            return response()->json([
+                'theme' => [
+                    'primaryColor' => '#4F46E5',
+                    'primaryColorHover' => '#4338CA',
+                    'primaryColorLight' => '#818CF8',
+                    'primaryColorDark' => '#3730A3',
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'theme' => $company->settings['theme'] ?? [
+                'primaryColor' => '#4F46E5',
+                'primaryColorHover' => '#4338CA',
+                'primaryColorLight' => '#818CF8',
+                'primaryColorDark' => '#3730A3',
+            ]
+        ]);
+    }
 } 

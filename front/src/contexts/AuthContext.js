@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
+import { toast } from 'react-hot-toast';
 
 const AuthContext = createContext({});
 
@@ -36,23 +37,35 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (credentials) => {
+  const login = async (email, password, remember = false) => {
     try {
-      const response = await api.post('/login', credentials);
+      const response = await api.post('login', { 
+        email, 
+        password,
+        remember 
+      });
+      
       const { token, user } = response.data;
-
-      localStorage.setItem('token', token);
-      sessionStorage.removeItem('token');
-
+      
       setUser(user);
-      setIsAuthenticated(true);
-
+      api.setToken(token);
+      
+      if (remember) {
+        localStorage.setItem('token', token);
+      } else {
+        sessionStorage.setItem('token', token);
+      }
+      
+      if (!user.company_id) {
+        router.push('/wizard');
+      } else {
+        router.push('/dashboard');
+      }
+      
       return true;
     } catch (error) {
-      console.error('Erro no login:', error);
-      setIsAuthenticated(false);
-      setUser(null);
-      throw error;
+      toast.error(error.response?.data?.message || 'Erro ao fazer login');
+      return false;
     }
   };
 
@@ -69,25 +82,19 @@ export function AuthProvider({ children }) {
     }
   };
 
-  useEffect(() => {
-    const checkWizard = async () => {
-      if (user && !location.pathname.includes('/wizard')) {
-        try {
-          const response = await api.get('/wizard/status');
-          if (response.data.needs_wizard) {
-            router.push('/wizard');
-          }
-        } catch (error) {
-          console.error('Erro ao verificar wizard:', error);
-        }
-      }
-    };
-
-    checkWizard();
-  }, [user]);
+  const updateUserAfterWizard = (userData) => {
+    setUser(userData);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      isLoading, 
+      login, 
+      logout,
+      updateUserAfterWizard 
+    }}>
       {children}
     </AuthContext.Provider>
   );

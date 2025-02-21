@@ -111,4 +111,24 @@ class WizardController extends Controller
             'current_step' => $user->wizard_step
         ]);
     }
+
+    public function complete(Request $request)
+    {
+        $user = $request->user();
+        
+        // Atualiza o status de primeiro acesso
+        $user->first_access = false;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Configuração inicial concluída com sucesso',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'first_access' => false,
+                'company_id' => $user->company_id
+            ]
+        ]);
+    }
 }

@@ -31,8 +31,7 @@ api.interceptors.response.use(
       // Redireciona apenas se não estiver já na página de login
       if (!window.location.pathname.includes('/login')) {
         const currentPath = encodeURIComponent(window.location.pathname);
-        // window.location.href = `/login?redirectUrl=${currentPath}`;
-        router.push('/login?redirectUrl=${currentPath}');
+        window.location.href = `/login?redirectUrl=${currentPath}`;
       }
     }
     return Promise.reject(error);
