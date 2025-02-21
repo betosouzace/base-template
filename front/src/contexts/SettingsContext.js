@@ -171,16 +171,15 @@ export function SettingsProvider({ children }) {
   const updateCompanyBranding = async (files) => {
     try {
       const formData = new FormData();
+      
+      // Adiciona apenas os arquivos que foram selecionados
       if (files.logo) formData.append('logo', files.logo);
       if (files.icon) formData.append('icon', files.icon);
       if (files.favicon) formData.append('favicon', files.favicon);
 
-      const response = await api.post('settings/company/branding', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      });
+      const response = await api.post('settings/company/branding', formData);
 
+      // Atualiza o estado com os novos caminhos das imagens
       setSettings(prev => ({
         ...prev,
         company: {
@@ -192,6 +191,7 @@ export function SettingsProvider({ children }) {
       }));
 
       toast.success('Imagens da empresa atualizadas com sucesso!');
+      return response.data;
     } catch (error) {
       console.error('Erro ao atualizar imagens da empresa:', error);
       toast.error('Erro ao atualizar imagens da empresa');

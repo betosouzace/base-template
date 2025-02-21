@@ -189,6 +189,57 @@ const SettingsPage = () => {
     }
   };
 
+  const handleSaveImages = async () => {
+    try {
+      setIsLoading(true);
+      const files = {
+        logo: logoFile,
+        icon: iconFile,
+        favicon: faviconFile
+      };
+
+      // Só envia se houver algum arquivo selecionado
+      if (Object.values(files).some(file => file)) {
+        await updateCompanyBranding(files);
+        
+        // Limpa os estados dos arquivos após o upload
+        setLogoFile(null);
+        setIconFile(null);
+        setFaviconFile(null);
+        
+        // Recarrega as configurações para atualizar as URLs das imagens
+        await loadSettings();
+      }
+    } catch (error) {
+      console.error('Erro ao salvar imagens:', error);
+      toast.error('Erro ao salvar imagens');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para renderizar preview da imagem
+  const renderImagePreview = (imageUrl, type) => {
+    if (!imageUrl) return null;
+
+    const fullUrl = imageUrl.startsWith('http') 
+      ? imageUrl 
+      : `${process.env.NEXT_PUBLIC_API_URL}/storage/${imageUrl}`;
+
+    return (
+      <div className="mt-2">
+        <img 
+          src={fullUrl}
+          alt={`Preview ${type}`}
+          className={`
+            ${type === 'logo' ? 'h-16 w-auto' : 'h-12 w-12'} 
+            object-contain rounded-lg border dark:border-gray-700
+          `}
+        />
+      </div>
+    );
+  };
+
   const tabs = [
     { id: "company", label: "Informações da Empresa", icon: <FaBuilding /> },
     { id: "payment", label: "Configurações de Pagamento", icon: <FaCreditCard /> },
@@ -248,6 +299,74 @@ const SettingsPage = () => {
             </div>
           </div>
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Logo da Empresa
+          </label>
+          <input
+            type="file"
+            onChange={(e) => handleFileChange(e, 'logo')}
+            accept="image/*"
+            className="mt-1 block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-indigo-50 file:text-indigo-700
+              hover:file:bg-indigo-100
+              dark:file:bg-gray-700 dark:file:text-gray-300"
+          />
+          {renderImagePreview(settings.company.logo, 'logo')}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Ícone
+          </label>
+          <input
+            type="file"
+            onChange={(e) => handleFileChange(e, 'icon')}
+            accept="image/*"
+            className="mt-1 block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-indigo-50 file:text-indigo-700
+              hover:file:bg-indigo-100
+              dark:file:bg-gray-700 dark:file:text-gray-300"
+          />
+          {renderImagePreview(settings.company.icon, 'icon')}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Favicon
+          </label>
+          <input
+            type="file"
+            onChange={(e) => handleFileChange(e, 'favicon')}
+            accept=".ico,image/x-icon,image/png"
+            className="mt-1 block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-indigo-50 file:text-indigo-700
+              hover:file:bg-indigo-100
+              dark:file:bg-gray-700 dark:file:text-gray-300"
+          />
+          {renderImagePreview(settings.company.favicon, 'favicon')}
+        </div>
+
+        {(logoFile || iconFile || faviconFile) && (
+          <div className="flex justify-end">
+            <button
+              onClick={handleSaveImages}
+              disabled={isLoading}
+              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            >
+              {isLoading ? 'Salvando...' : 'Salvar Imagens'}
+            </button>
+          </div>
+        )}
       </div>
     );
   };

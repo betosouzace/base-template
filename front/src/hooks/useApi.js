@@ -18,6 +18,9 @@ api.interceptors.request.use((config) => {
   // Adiciona Content-Type apenas se não for FormData
   if (!(config.data instanceof FormData)) {
     config.headers['Content-Type'] = 'application/json';
+  } else {
+    // Se for FormData, remove o Content-Type para que o navegador defina o boundary correto
+    delete config.headers['Content-Type'];
   }
   
   return config;
