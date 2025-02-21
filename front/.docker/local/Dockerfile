@@ -23,3 +23,5 @@ ENTRYPOINT /root/entrypoint.sh
 
 # mantem o container em execução
 # CMD ["tail", "-f", "/dev/null"]
+
+RUN apk add --no-cache netcat-openbsd

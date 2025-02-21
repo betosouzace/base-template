@@ -9,7 +9,8 @@ RUN apk add --no-cache \
     libzip \
     openssl \
     curl \
-    git
+    git \
+    netcat-openbsd
 
 RUN docker-php-ext-configure pdo_mysql
 RUN docker-php-ext-install pdo pdo_mysql
