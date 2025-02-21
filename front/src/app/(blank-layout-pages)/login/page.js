@@ -102,12 +102,9 @@ const Login = () => {
           <div className="flex justify-center mb-8">
             <CompanyLogo 
               logoUrl={branding?.logo}
-              className="w-auto h-16"
+              className="w-auto h-20"
             />
           </div>
-          <h2 className={`mt-6 text-center text-3xl font-extrabold ${theme === 'dark' ? "text-white" : "text-gray-900"}`}>
-            {branding?.name || 'Login'}
-          </h2>
         </div>
 
         {/* Mensagens de Erro */}

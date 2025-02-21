@@ -45,38 +45,83 @@ export function SettingsProvider({ children }) {
     }
   });
 
-  const loadSettings = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
+  useEffect(() => {
+    if (user) {
+      loadSettings();
     }
+  }, [user]);
 
+  const loadSettings = async () => {
     try {
       setLoading(true);
-      const response = await api.get('settings');
-      const { user_settings, company_settings } = response.data;
+      const response = await api.get('settings/user');
+      const { user_settings, company_settings, company } = response.data;
       
-      setSettings(prev => ({
-        company: {
-          name: user?.company?.name || "",
-          document: user?.company?.document || "",
-          email: user?.company?.email || "",
-          phone: user?.company?.phone || "",
-          logo: user?.company?.logo || null,
-          icon: user?.company?.icon || null,
-          favicon: user?.company?.favicon || null,
-          settings: {
-            ...prev.company.settings,
-            ...company_settings
+      if (!company) {
+        setSettings({
+          company: {
+            name: "",
+            document: "",
+            email: "",
+            phone: "",
+            logo: null,
+            icon: null,
+            favicon: null,
+            settings: {
+              theme: {
+                primaryColor: "#4F46E5",
+                primaryColorHover: "#4338CA",
+                primaryColorLight: "#818CF8",
+                primaryColorDark: "#3730A3"
+              },
+              paymentMethods: [],
+              currency: "BRL",
+              smtpServer: "",
+              senderEmail: "",
+              whatsappKey: "",
+              telegramToken: ""
+            }
+          },
+          user: {
+            settings: user_settings || {
+              theme: "light",
+              density: "normal",
+              highContrast: false,
+              fontSize: "medium"
+            }
           }
-        },
-        user: {
-          settings: {
-            ...prev.user.settings,
-            ...user_settings
+        });
+      } else {
+        setSettings({
+          company: {
+            name: company.name,
+            document: company.document,
+            email: company.email,
+            phone: company.phone,
+            logo: company.logo,
+            icon: company.icon,
+            favicon: company.favicon,
+            settings: {
+              ...company_settings,
+              theme: {
+                primaryColor: "#4F46E5",
+                primaryColorHover: "#4338CA",
+                primaryColorLight: "#818CF8",
+                primaryColorDark: "#3730A3",
+                ...(company_settings?.theme || {})
+              }
+            }
+          },
+          user: {
+            settings: user_settings || {
+              theme: "light",
+              density: "normal",
+              highContrast: false,
+              fontSize: "medium"
+            }
           }
-        }
-      }));
+        });
+      }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
       if (error.response?.status !== 401) {
@@ -198,10 +243,6 @@ export function SettingsProvider({ children }) {
       }
     }));
   };
-
-  useEffect(() => {
-    loadSettings();
-  }, []);
 
   useEffect(() => {
     if (user?.company) {

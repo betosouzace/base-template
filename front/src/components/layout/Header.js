@@ -1,15 +1,38 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { FiMenu, FiChevronLeft, FiX } from 'react-icons/fi';
 import SearchDialog from '../ui/SearchDialog';
 import NotificationsMenu from '../ui/NotificationsMenu';
 import UserMenu from '../ui/UserMenu';
+import { CompanyLogo } from '../CompanyLogo';
+import { DefaultIcon } from '../DefaultIcon';
+import { useApi } from '@/hooks/useApi';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Header = ({ searchQuery, setSearchQuery, toggleSidebar, isOpen, isMobile }) => {
   const [showSearchDialog, setShowSearchDialog] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  
+  const [branding, setBranding] = useState(null);
+  const api = useApi();
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    const loadBranding = async () => {
+      try {
+        const response = await api.get('company/theme', {
+          skipAuthRefresh: true,
+          withCredentials: false
+        });
+        setBranding(response.data.branding);
+      } catch (error) {
+        console.error('Erro ao carregar branding:', error);
+      }
+    };
+
+    loadBranding();
+  }, []);
+
   return (
     <div className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 shadow-sm z-40">
       <div className="max-w-[1920px] mx-auto px-4 h-full flex items-center justify-between">
@@ -27,33 +50,50 @@ const Header = ({ searchQuery, setSearchQuery, toggleSidebar, isOpen, isMobile }
               )
             ) : (
               <FiChevronLeft
-                className={`w-6 h-6 text-gray-600 dark:text-gray-300 transition-transform duration-300 ${
-                  !isOpen ? "rotate-180" : ""
-                }`}
+                className={`w-6 h-6 text-gray-600 dark:text-gray-300 transition-transform duration-300 ${!isOpen ? "rotate-180" : ""}`}
               />
             )}
           </button>
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">
-            D
+
+          {/* Ícone da empresa (apenas mobile) */}
+          {isMobile && (
+            branding?.icon ? (
+              <img
+                src={branding.icon.startsWith('http')
+                  ? branding.icon
+                  : `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.icon}`}
+                alt="Icon"
+                className="w-14 h-14 rounded-lg"
+              />
+            ) : (
+              <div className="w-14 h-14 flex items-center justify-center">
+                <DefaultIcon className="text-white" />
+              </div>
+            )
+          )}
+
+          {/* Logo da empresa (apenas desktop) */}
+          <div className="hidden md:block">
+            <CompanyLogo
+              logoUrl={branding?.logo}
+              className="w-auto h-14"
+            />
           </div>
-          <h1 className="font-bold text-xl hidden md:block text-gray-800 dark:text-white">
-            Dashboard
-          </h1>
         </div>
 
         <div className="flex items-center space-x-4">
-          <SearchDialog 
+          <SearchDialog
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             showDialog={showSearchDialog}
             setShowDialog={setShowSearchDialog}
           />
-          <NotificationsMenu 
+          <NotificationsMenu
             show={showNotifications}
             setShow={setShowNotifications}
             setShowUserMenu={setShowUserMenu}
           />
-          <UserMenu 
+          <UserMenu
             show={showUserMenu}
             setShow={setShowUserMenu}
             setShowNotifications={setShowNotifications}

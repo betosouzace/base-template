@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
+import { useApi } from '@/hooks/useApi';
 
 const WizardPage = () => {
   const router = useRouter();
-  const { settings, updateSettings } = useSettings();
-  const { user } = useAuth();
+  const api = useApi();
+  const { settings, updateSettings, loadSettings } = useSettings();
+  const { user, updateUserAfterWizard } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   
   // Usar useEffect para atualizar formData quando settings mudar
@@ -61,7 +63,7 @@ const WizardPage = () => {
 
   const checkWizardStatus = async () => {
     try {
-      const response = await api.get('/wizard/status');
+      const response = await api.get('wizard/status');
       if (!response.data.needs_wizard) {
         router.push('/settings');
         return;
@@ -81,41 +83,131 @@ const WizardPage = () => {
 
   const handleNext = async () => {
     try {
-      const newSettings = {
+      // Se for o último passo, chama handleFinish
+      if (currentStep === 4) {
+        await handleFinish();
+        return;
+      }
+
+      // Prepara os dados de acordo com o passo atual
+      let stepData = {};
+      switch (currentStep) {
+        case 1:
+          stepData = {
+            name: formData.name,
+            document: formData.document,
+            email: formData.email,
+            phone: formData.phone
+          };
+          break;
+        case 2:
+          stepData = {
+            paymentMethods: formData.paymentMethods,
+            currency: formData.currency
+          };
+          break;
+        case 3:
+          stepData = {
+            smtpServer: formData.smtpServer,
+            senderEmail: formData.senderEmail,
+            whatsappKey: formData.whatsappKey,
+            telegramToken: formData.telegramToken
+          };
+          break;
+        case 4:
+          stepData = {
+            theme: formData.theme,
+            density: formData.density,
+            fontSize: formData.fontSize,
+            highContrast: formData.highContrast
+          };
+          break;
+      }
+
+      // Salva o passo atual
+      await api.post('wizard/step', {
+        step: currentStep,
+        ...stepData
+      });
+      
+      // Avança para o próximo passo
+      setCurrentStep(prev => prev + 1);
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+      if (error.response?.data?.errors) {
+        const errorMessages = Object.values(error.response.data.errors)
+          .flat()
+          .join(', ');
+        toast.error(`Erro ao salvar configurações: ${errorMessages}`);
+      } else {
+        toast.error('Erro ao salvar configurações');
+      }
+    }
+  };
+
+  const handleFinish = async () => {
+    try {
+      // Valida os dados obrigatórios
+      if (!formData.name || !formData.document || !formData.email || !formData.phone) {
+        toast.error('Por favor, preencha todos os campos obrigatórios');
+        return;
+      }
+
+      // Prepara os dados da empresa e do usuário
+      const wizardData = {
         company: {
           name: formData.name,
           document: formData.document,
           email: formData.email,
           phone: formData.phone,
           settings: {
-            paymentMethods: formData.paymentMethods,
-            currency: formData.currency,
-            smtpServer: formData.smtpServer,
-            senderEmail: formData.senderEmail,
-            whatsappKey: formData.whatsappKey,
-            telegramToken: formData.telegramToken,
+            paymentMethods: formData.paymentMethods || [],
+            currency: formData.currency || "BRL",
+            smtpServer: formData.smtpServer || "",
+            senderEmail: formData.senderEmail || "",
+            whatsappKey: formData.whatsappKey || "",
+            telegramToken: formData.telegramToken || "",
+            theme: {
+              primaryColor: "#4F46E5",
+              primaryColorHover: "#4338CA",
+              primaryColorLight: "#818CF8",
+              primaryColorDark: "#3730A3"
+            }
           }
         },
         user: {
           settings: {
-            theme: formData.theme,
-            density: formData.density,
-            fontSize: formData.fontSize,
-            highContrast: formData.highContrast
+            theme: formData.theme || "light",
+            density: formData.density || "normal",
+            fontSize: formData.fontSize || "medium",
+            highContrast: formData.highContrast || false
           }
         }
       };
 
-      await updateSettings(newSettings);
+      // Envia os dados para a API
+      const response = await api.post('wizard/finish', wizardData);
       
-      if (currentStep === 4) {
-        router.push('/settings');
-        toast.success('Configuração inicial concluída!');
-      } else {
-        setCurrentStep(prev => prev + 1);
-      }
+      // Atualiza o contexto de autenticação com os novos dados do usuário
+      updateUserAfterWizard(response.data.user);
+      
+      // Recarrega as configurações para atualizar o contexto
+      await loadSettings();
+      
+      // Redireciona para o dashboard
+      router.replace('/dashboard');
+      
+      toast.success('Configuração inicial concluída com sucesso!');
     } catch (error) {
-      toast.error('Erro ao salvar configurações');
+      console.error('Erro ao finalizar wizard:', error);
+      if (error.response?.data?.errors) {
+        const errorMessages = Object.values(error.response.data.errors)
+          .flat()
+          .join(', ');
+        toast.error(`Erro ao finalizar wizard: ${errorMessages}`);
+      } else {
+        toast.error('Erro ao finalizar wizard');
+      }
     }
   };
 

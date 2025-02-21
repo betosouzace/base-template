@@ -15,7 +15,7 @@ import { ChromePicker } from 'react-color';
 const SettingsPage = () => {
   const { settings, loading, updateSettings, loadSettings, updateCompanyBranding } = useSettings();
   const { theme, toggleTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const api = useApi();
   const [activeTab, setActiveTab] = useState("company");
   const [formData, setFormData] = useState({
@@ -42,15 +42,35 @@ const SettingsPage = () => {
   });
 
   useEffect(() => {
-    if (settings?.company) {
-      setFormData(settings);
+    if (isAuthenticated && !settings?.company) {
+      loadSettings();
     }
-  }, [settings]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    console.log('Settings atualizados:', settings);
-    console.log('FormData atualizado:', formData);
-  }, [settings, formData]);
+    if (settings?.company) {
+      setFormData({
+        company: {
+          name: settings.company.name || "",
+          document: settings.company.document || "",
+          email: settings.company.email || "",
+          phone: settings.company.phone || "",
+          settings: {
+            theme: settings.company.settings?.theme || {
+              primaryColor: "#4F46E5",
+              primaryColorHover: "#4338CA",
+              primaryColorLight: "#818CF8",
+              primaryColorDark: "#3730A3",
+            },
+            ...(settings.company.settings || {})
+          }
+        },
+        user: {
+          settings: settings.user.settings || {}
+        }
+      });
+    }
+  }, [settings]);
 
   const handleInputChange = (section, field, value) => {
     setFormData(prev => ({
@@ -453,9 +473,9 @@ const SettingsPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !settings?.company) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );

@@ -11,6 +11,8 @@ class SettingsController extends Controller
     public function getUserSettings(Request $request)
     {
         $user = $request->user();
+        $company = $user->company;
+        
         return response()->json([
             'user_settings' => $user->settings ?? [
                 'theme' => 'light',
@@ -18,14 +20,29 @@ class SettingsController extends Controller
                 'highContrast' => false,
                 'fontSize' => 'medium'
             ],
-            'company_settings' => $user->company?->settings ?? [
+            'company_settings' => $company?->settings ?? [
                 'paymentMethods' => [],
                 'currency' => 'BRL',
                 'smtpServer' => '',
                 'senderEmail' => '',
                 'whatsappKey' => '',
                 'telegramToken' => '',
-            ]
+                'theme' => [
+                    'primaryColor' => '#4F46E5',
+                    'primaryColorHover' => '#4338CA',
+                    'primaryColorLight' => '#818CF8',
+                    'primaryColorDark' => '#3730A3',
+                ]
+            ],
+            'company' => $company ? [
+                'name' => $company->name,
+                'document' => $company->document,
+                'email' => $company->email,
+                'phone' => $company->phone,
+                'logo' => $company->logo,
+                'icon' => $company->icon,
+                'favicon' => $company->favicon,
+            ] : null
         ]);
     }
 
@@ -137,6 +154,26 @@ class SettingsController extends Controller
         return response()->json([
             'message' => 'Imagens da empresa atualizadas com sucesso',
             ...$paths
+        ]);
+    }
+
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        $company = $user->company;
+
+        return response()->json([
+            'user_settings' => $user->settings,
+            'company_settings' => $company ? $company->settings : null,
+            'company' => $company ? [
+                'name' => $company->name,
+                'document' => $company->document,
+                'email' => $company->email,
+                'phone' => $company->phone,
+                'logo' => $company->logo,
+                'icon' => $company->icon,
+                'favicon' => $company->favicon,
+            ] : null
         ]);
     }
 } 
