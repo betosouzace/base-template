@@ -12,27 +12,70 @@ import "react-toastify/dist/ReactToastify.css";
 import { useSettings } from '@/contexts/SettingsContext';
 
 const SettingsPage = () => {
-  const { settings, loading, updateCompanySettings, updateCompanyBranding } = useSettings();
+  const { settings, loading, updateCompanySettings, updateCompanyBranding, loadSettings } = useSettings();
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const api = useApi();
   const [activeTab, setActiveTab] = useState("company");
+  
+  // Inicializar formData com valores do settings
   const [formData, setFormData] = useState({
     company: {
-      name: '',
-      document: '',
-      email: '',
-      phone: '',
+      name: settings?.company?.name || '',
+      document: settings?.company?.document || '',
+      email: settings?.company?.email || '',
+      phone: settings?.company?.phone || '',
       settings: {
-        theme: {
-          primaryColor: '',
-          primaryColorHover: '',
-          primaryColorLight: '',
-          primaryColorDark: ''
-        }
+        theme: settings?.company?.settings?.theme || {
+          primaryColor: '#4F46E5',
+          primaryColorHover: '#4338CA',
+          primaryColorLight: '#818CF8',
+          primaryColorDark: '#3730A3'
+        },
+        paymentMethods: settings?.company?.settings?.paymentMethods || [],
+        currency: settings?.company?.settings?.currency || 'BRL',
+        smtpServer: settings?.company?.settings?.smtpServer || '',
+        senderEmail: settings?.company?.settings?.senderEmail || '',
+        whatsappKey: settings?.company?.settings?.whatsappKey || '',
+        telegramToken: settings?.company?.settings?.telegramToken || ''
+      }
+    },
+    user: {
+      settings: settings?.user?.settings || {
+        theme: 'light',
+        density: 'normal',
+        fontSize: 'medium',
+        highContrast: false
       }
     }
   });
+
+  // Atualizar formData quando settings mudar
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        company: {
+          name: settings.company.name || '',
+          document: settings.company.document || '',
+          email: settings.company.email || '',
+          phone: settings.company.phone || '',
+          settings: {
+            theme: settings.company.settings?.theme || formData.company.settings.theme,
+            paymentMethods: settings.company.settings?.paymentMethods || [],
+            currency: settings.company.settings?.currency || 'BRL',
+            smtpServer: settings.company.settings?.smtpServer || '',
+            senderEmail: settings.company.settings?.senderEmail || '',
+            whatsappKey: settings.company.settings?.whatsappKey || '',
+            telegramToken: settings.company.settings?.telegramToken || ''
+          }
+        },
+        user: {
+          settings: settings.user.settings || formData.user.settings
+        }
+      });
+    }
+  }, [settings]);
+
   const [showColorPicker, setShowColorPicker] = useState({
     primaryColor: false,
     primaryColorHover: false,
@@ -45,27 +88,19 @@ const SettingsPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !settings?.company) {
-      loadSettings();
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (settings?.company) {
-      setFormData({
-        company: {
-          name: settings.company.name,
-          document: settings.company.document,
-          email: settings.company.email,
-          phone: settings.company.phone,
-          settings: settings.company.settings
-        },
-        user: {
-          settings: settings.user.settings || {}
+    const fetchSettings = async () => {
+      if (isAuthenticated) {
+        try {
+          await loadSettings();
+        } catch (error) {
+          console.error('Erro ao carregar configurações:', error);
+          toast.error('Erro ao carregar configurações');
         }
-      });
-    }
-  }, [settings]);
+      }
+    };
+
+    fetchSettings();
+  }, [isAuthenticated]);
 
   const handleInputChange = (section, field, value) => {
     setFormData(prev => ({

@@ -9,32 +9,8 @@ const SettingsContext = createContext({});
 export function SettingsProvider({ children }) {
   const api = useApi();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  
+  const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
-    company: {
-      name: "",
-      document: "",
-      email: "",
-      phone: "",
-      logo: null,
-      icon: null,
-      favicon: null,
-      settings: {
-        paymentMethods: [],
-        currency: "BRL",
-        smtpServer: "",
-        senderEmail: "",
-        whatsappKey: "",
-        telegramToken: "",
-        theme: {
-          primaryColor: "#4F46E5", // Cor padrão do Indigo-600
-          primaryColorHover: "#4338CA", // Indigo-700
-          primaryColorLight: "#818CF8", // Indigo-400
-          primaryColorDark: "#3730A3", // Indigo-800
-        }
-      }
-    },
     user: {
       settings: {
         theme: "light",
@@ -42,26 +18,31 @@ export function SettingsProvider({ children }) {
         highContrast: false,
         fontSize: "medium"
       }
+    },
+    company: {
+      name: '',
+      document: '',
+      email: '',
+      phone: '',
+      logo: null,
+      icon: null,
+      favicon: null,
+      settings: {
+        paymentMethods: [],
+        currency: 'BRL',
+        smtpServer: '',
+        senderEmail: '',
+        whatsappKey: '',
+        telegramToken: '',
+        theme: {
+          primaryColor: '#4F46E5',
+          primaryColorHover: '#4338CA',
+          primaryColorLight: '#818CF8',
+          primaryColorDark: '#3730A3'
+        }
+      }
     }
   });
-
-  useEffect(() => {
-    const initializeSettings = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        await loadSettings();
-      } catch (error) {
-        console.error('Erro ao inicializar configurações:', error);
-        setLoading(false);
-      }
-    };
-
-    initializeSettings();
-  }, [user]);
 
   const loadSettings = async () => {
     try {
@@ -250,18 +231,16 @@ export function SettingsProvider({ children }) {
   }, [user]);
 
   return (
-    <SettingsContext.Provider 
-      value={{
-        settings,
-        loading,
-        loadSettings,
-        updateSettings,
-        updateUserSettings,
-        updateCompanySettings,
-        updateCompanyBranding,
-        updateCompanyTheme
-      }}
-    >
+    <SettingsContext.Provider value={{
+      settings,
+      loading,
+      loadSettings,
+      updateSettings,
+      updateUserSettings,
+      updateCompanySettings,
+      updateCompanyBranding,
+      updateCompanyTheme
+    }}>
       {children}
     </SettingsContext.Provider>
   );
