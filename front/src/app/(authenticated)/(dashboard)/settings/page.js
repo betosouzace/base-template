@@ -10,6 +10,7 @@ import { useApi } from '@/hooks/useApi';
 import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import { useSettings } from '@/contexts/SettingsContext';
+import { CompanyLogo } from '@/components/CompanyLogo';
 
 const SettingsPage = () => {
   const { settings, loading, updateCompanySettings, updateUserSettings, updateCompanyBranding, loadSettings } = useSettings();
@@ -218,28 +219,6 @@ const SettingsPage = () => {
     }
   };
 
-  // Função para renderizar preview da imagem
-  const renderImagePreview = (imageUrl, type) => {
-    if (!imageUrl) return null;
-
-    const fullUrl = imageUrl.startsWith('http') 
-      ? imageUrl 
-      : `${process.env.NEXT_PUBLIC_API_URL}/storage/${imageUrl}`;
-
-    return (
-      <div className="mt-2">
-        <img 
-          src={fullUrl}
-          alt={`Preview ${type}`}
-          className={`
-            ${type === 'logo' ? 'h-16 w-auto' : 'h-12 w-12'} 
-            object-contain rounded-lg border dark:border-gray-700
-          `}
-        />
-      </div>
-    );
-  };
-
   const tabs = [
     { id: "company", label: "Informações da Empresa", icon: <FaBuilding /> },
     { id: "payment", label: "Configurações de Pagamento", icon: <FaCreditCard /> },
@@ -315,7 +294,13 @@ const SettingsPage = () => {
               hover:file:bg-indigo-100
               dark:file:bg-gray-700 dark:file:text-gray-300"
           />
-          {renderImagePreview(settings.company.logo, 'logo')}
+          <div className="mt-2">
+            <CompanyLogo
+              logoUrl={settings.company.logo}
+              type="logo"
+              className="h-16 w-auto object-contain rounded-lg border dark:border-gray-700"
+            />
+          </div>
         </div>
 
         <div>
@@ -334,7 +319,13 @@ const SettingsPage = () => {
               hover:file:bg-indigo-100
               dark:file:bg-gray-700 dark:file:text-gray-300"
           />
-          {renderImagePreview(settings.company.icon, 'icon')}
+          <div className="mt-2">
+            <CompanyLogo
+              iconUrl={settings.company.icon}
+              type="icon"
+              className="h-12 w-12 object-contain rounded-lg border dark:border-gray-700"
+            />
+          </div>
         </div>
 
         <div>
@@ -353,7 +344,13 @@ const SettingsPage = () => {
               hover:file:bg-indigo-100
               dark:file:bg-gray-700 dark:file:text-gray-300"
           />
-          {renderImagePreview(settings.company.favicon, 'favicon')}
+          <div className="mt-2">
+            <CompanyLogo
+              faviconUrl={settings.company.favicon}
+              type="favicon"
+              className="h-8 w-8 object-contain rounded-lg border dark:border-gray-700"
+            />
+          </div>
         </div>
 
         {(logoFile || iconFile || faviconFile) && (
@@ -361,7 +358,7 @@ const SettingsPage = () => {
             <button
               onClick={handleSaveImages}
               disabled={isLoading}
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Salvando...' : 'Salvar Imagens'}
             </button>
