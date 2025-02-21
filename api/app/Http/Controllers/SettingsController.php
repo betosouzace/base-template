@@ -15,6 +15,12 @@ class SettingsController extends Controller
             $user = $request->user();
             $company = $user->company;
             
+            // Função helper para gerar URL completa
+            $getFullUrl = function($path) {
+                if (!$path) return null;
+                return url('storage/' . $path);
+            };
+            
             return response()->json([
                 'user_settings' => $user->settings ?? [
                     'theme' => 'light',
@@ -41,9 +47,9 @@ class SettingsController extends Controller
                     'document' => $company->document,
                     'email' => $company->email,
                     'phone' => $company->phone,
-                    'logo' => $company->logo,
-                    'icon' => $company->icon,
-                    'favicon' => $company->favicon,
+                    'logo' => $getFullUrl($company->logo),
+                    'icon' => $getFullUrl($company->icon),
+                    'favicon' => $getFullUrl($company->favicon),
                 ] : null
             ]);
         } catch (\Exception $e) {
@@ -185,6 +191,12 @@ class SettingsController extends Controller
         $user = $request->user();
         $company = $user->company;
 
+        // Função helper para gerar URL completa
+        $getFullUrl = function($path) {
+            if (!$path) return null;
+            return url('storage/' . $path);
+        };
+
         return response()->json([
             'user_settings' => $user->settings,
             'company_settings' => $company ? $company->settings : null,
@@ -193,9 +205,9 @@ class SettingsController extends Controller
                 'document' => $company->document,
                 'email' => $company->email,
                 'phone' => $company->phone,
-                'logo' => $company->logo,
-                'icon' => $company->icon,
-                'favicon' => $company->favicon,
+                'logo' => $getFullUrl($company->logo),
+                'icon' => $getFullUrl($company->icon),
+                'favicon' => $getFullUrl($company->favicon),
             ] : null
         ]);
     }

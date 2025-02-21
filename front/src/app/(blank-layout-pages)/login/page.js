@@ -29,10 +29,17 @@ const Login = () => {
           skipAuthRefresh: true,
           withCredentials: false
         });
-        setBranding(response.data.branding);
         
-        // Atualiza o título da página
-        document.title = response.data.branding.name;
+        const { branding } = response.data;
+        // Atualiza o branding com as URLs completas
+        setBranding({
+          ...branding,
+          logo: branding.logo ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.logo}` : null,
+          icon: branding.icon ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.icon}` : null,
+          favicon: branding.favicon ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.favicon}` : null,
+        });
+        
+        document.title = branding.name;
       } catch (error) {
         console.error('Erro ao carregar branding:', error);
       }

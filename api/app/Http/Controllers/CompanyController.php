@@ -46,9 +46,15 @@ class CompanyController extends Controller
         // Pega o domínio da requisição
         $host = $request->getHost();
         
+        // Debug para verificar o host recebido
+        \Log::info('Host da requisição:', ['host' => $host]);
+        
         // Busca a empresa pelo domínio
         $company = Company::where('domain', $host)->first();
         
+        // Debug para verificar a empresa encontrada
+        \Log::info('Empresa encontrada:', ['company' => $company]);
+
         // Tema padrão
         $defaultTheme = [
             'primaryColor' => '#4F46E5',
@@ -57,8 +63,13 @@ class CompanyController extends Controller
             'primaryColorDark' => '#3730A3',
         ];
 
-        $baseUrl = config('app.url');
-        
+        // Se não encontrar a empresa, tenta pegar a primeira empresa do banco
+        if (!$company) {
+            $company = Company::first();
+            \Log::info('Usando primeira empresa:', ['company' => $company]);
+        }
+
+        // Se ainda não tiver empresa, retorna o tema padrão
         if (!$company) {
             return response()->json([
                 'theme' => $defaultTheme,
@@ -71,12 +82,18 @@ class CompanyController extends Controller
             ]);
         }
 
+        // Função helper para gerar URL completa
+        $getFullUrl = function($path) {
+            if (!$path) return null;
+            return url('storage/' . $path);
+        };
+
         return response()->json([
             'theme' => $company->settings['theme'] ?? $defaultTheme,
             'branding' => [
-                'logo' => $company->logo ? "{$baseUrl}/storage/{$company->logo}" : null,
-                'icon' => $company->icon ? "{$baseUrl}/storage/{$company->icon}" : null,
-                'favicon' => $company->favicon ? "{$baseUrl}/storage/{$company->favicon}" : null,
+                'logo' => $getFullUrl($company->logo),
+                'icon' => $getFullUrl($company->icon),
+                'favicon' => $getFullUrl($company->favicon),
                 'name' => $company->name
             ]
         ]);

@@ -13,7 +13,6 @@ export function CompanyThemeLoader({ children }) {
   useEffect(() => {
     const loadCompanyTheme = async () => {
       try {
-        // Usa uma instância do axios sem interceptors de autenticação
         const response = await api.get('company/theme', {
           skipAuthRefresh: true,
           withCredentials: false
@@ -30,21 +29,18 @@ export function CompanyThemeLoader({ children }) {
         // Atualiza o tema no contexto de settings
         updateCompanyTheme(theme);
         
-        // Atualiza o branding
+        // Usa as URLs completas que já vêm da API
         setBranding(branding);
         
-        // Atualiza o favicon se existir
+        // Atualiza o favicon
         if (branding.favicon) {
           const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
           link.type = 'image/x-icon';
           link.rel = 'shortcut icon';
-          link.href = branding.favicon.startsWith('http') 
-            ? branding.favicon 
-            : `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.favicon}`;
+          link.href = branding.favicon;
           document.getElementsByTagName('head')[0].appendChild(link);
         }
         
-        // Atualiza o título da página
         document.title = branding.name;
       } catch (error) {
         console.error('Erro ao carregar tema da empresa:', error);
@@ -68,10 +64,7 @@ export function CompanyThemeLoader({ children }) {
           {branding.favicon && (
             <link 
               rel="shortcut icon" 
-              href={branding.favicon.startsWith('http') 
-                ? branding.favicon 
-                : `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.favicon}`
-              }
+              href={branding.favicon}
             />
           )}
         </Head>

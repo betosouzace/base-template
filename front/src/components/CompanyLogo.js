@@ -62,9 +62,7 @@ export function CompanyLogo({
           src={fullUrl}
           alt={`${type} preview`}
           fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-contain"
-          priority={type === 'logo'}
+          style={{ objectFit: 'contain' }}
           onError={() => renderDefault()}
         />
       </div>

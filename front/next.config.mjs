@@ -8,13 +8,12 @@ const nextConfig = {
         port: '8000',
         pathname: '/storage/**',
       },
-      // Adicione aqui outros padrões de domínio conforme necessário
-      // Por exemplo, para produção:
-      {
-        protocol: 'https',
-        hostname: 'seu-dominio.com',
-        pathname: '/storage/**',
-      }
+      // Adicione também a configuração para produção se necessário
+      // {
+      //   protocol: 'https',
+      //   hostname: 'seu-dominio-de-producao.com',
+      //   pathname: '/storage/**',
+      // },
     ],
   },
   // ... outras configurações existentes
