@@ -137,12 +137,12 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function updateCompanyBranding(Request $request)
+    public function updateBranding(Request $request)
     {
         $request->validate([
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
-            'favicon' => 'nullable|image|mimes:ico,png|max:100'
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',    // 10MB
+            'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',    // 10MB
+            'favicon' => 'nullable|image|mimes:ico,png|max:10240'           // 10MB
         ]);
 
         $user = $request->user();

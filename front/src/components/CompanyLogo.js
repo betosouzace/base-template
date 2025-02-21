@@ -23,13 +23,22 @@ export function CompanyLogo({
   };
 
   const renderDefault = () => {
+    const defaultClasses = `${className} ${theme === 'dark' ? darkClassName : lightClassName}`;
+    
     switch (type) {
       case 'icon':
-        return <DefaultIcon className={className} color={color} />;
       case 'favicon':
-        return <DefaultIcon className={className} color={color} />;
+        return (
+          <div className={defaultClasses}>
+            <DefaultIcon color={color} className="w-full h-full" />
+          </div>
+        );
       default:
-        return <DefaultLogo className={className} color={color} />;
+        return (
+          <div className={defaultClasses}>
+            <DefaultLogo color={color} className="w-full h-full" />
+          </div>
+        );
     }
   };
 
@@ -43,6 +52,10 @@ export function CompanyLogo({
     const { width, height } = dimensions[type] || dimensions.logo;
     const fullUrl = getFullUrl(url);
 
+    if (!fullUrl) {
+      return renderDefault();
+    }
+
     return (
       <div style={{ width, height }} className={`relative ${className}`}>
         <Image
@@ -52,6 +65,7 @@ export function CompanyLogo({
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-contain"
           priority={type === 'logo'}
+          onError={() => renderDefault()}
         />
       </div>
     );
@@ -69,5 +83,5 @@ export function CompanyLogo({
   };
 
   const url = getUrlForType();
-  return url ? renderImage(url) : renderDefault();
+  return renderImage(url);
 } 

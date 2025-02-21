@@ -126,9 +126,19 @@ const SettingsPage = () => {
     }));
   };
 
-  const handleFileChange = (event, type) => {
-    const file = event.target.files[0];
+  const handleFileChange = (e, type) => {
+    const file = e.target.files[0];
     if (!file) return;
+
+    // Novo limite unificado de 10MB para todos os tipos
+    const maxSize = 10240; // 10MB em KB
+    const fileSize = Math.round(file.size / 1024); // Converter para KB
+
+    if (fileSize > maxSize) {
+      toast.error(`O arquivo deve ter no máximo 10MB`);
+      e.target.value = ''; // Limpa o input
+      return;
+    }
 
     switch (type) {
       case 'logo':
@@ -282,6 +292,9 @@ const SettingsPage = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Logo da Empresa
           </label>
+          <span className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">
+            Máximo: 10MB (JPG, PNG, GIF)
+          </span>
           <input
             type="file"
             onChange={(e) => handleFileChange(e, 'logo')}
@@ -298,15 +311,18 @@ const SettingsPage = () => {
             <CompanyLogo
               logoUrl={settings.company.logo}
               type="logo"
-              className="h-16 w-auto object-contain rounded-lg border dark:border-gray-700"
+              className="h-16 object-contain"
             />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Ícone
+            Ícone da Empresa
           </label>
+          <span className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">
+            Máximo: 10MB (JPG, PNG, GIF)
+          </span>
           <input
             type="file"
             onChange={(e) => handleFileChange(e, 'icon')}
@@ -332,6 +348,9 @@ const SettingsPage = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Favicon
           </label>
+          <span className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">
+            Máximo: 10MB (ICO, PNG)
+          </span>
           <input
             type="file"
             onChange={(e) => handleFileChange(e, 'favicon')}
