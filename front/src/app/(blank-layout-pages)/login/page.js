@@ -1,15 +1,19 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaGoogle, FaFacebook } from "react-icons/fa";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { CompanyLogo } from '@/components/CompanyLogo';
+import { useApi } from '@/hooks/useApi';
 
 const Login = () => {
   const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const api = useApi();
+  const [branding, setBranding] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +21,25 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
   const [apiLoading, setApiLoading] = useState(false);
+
+  useEffect(() => {
+    const loadBranding = async () => {
+      try {
+        const response = await api.get('company/theme', {
+          skipAuthRefresh: true,
+          withCredentials: false
+        });
+        setBranding(response.data.branding);
+        
+        // Atualiza o título da página
+        document.title = response.data.branding.name;
+      } catch (error) {
+        console.error('Erro ao carregar branding:', error);
+      }
+    };
+
+    loadBranding();
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -38,15 +61,20 @@ const Login = () => {
     e.preventDefault();
     if (validateForm()) {
       setApiLoading(true);
+      setErrors({});
+      
       try {
-        await login(email, password, rememberMe);
-        setSuccess(true);
-        setErrors({});
-        
-        router.push('/home');
+        const result = await login(email, password, rememberMe);
+        if (result.success) {
+          setSuccess(true);
+        } else {
+          setErrors({
+            api: result.error
+          });
+        }
       } catch (error) {
         setErrors({
-          api: error.response?.data?.error || "Erro ao realizar login"
+          api: "Erro ao conectar com o servidor"
         });
       } finally {
         setApiLoading(false);
@@ -60,27 +88,61 @@ const Login = () => {
         <div className="flex justify-end">
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            {theme === 'dark' ? <MdLightMode className="w-6 h-6 text-yellow-400" /> : <MdDarkMode className="w-6 h-6 text-gray-600" />}
+            {theme === 'dark' ? (
+              <MdLightMode className="h-5 w-5 text-gray-300" />
+            ) : (
+              <MdDarkMode className="h-5 w-5 text-gray-600" />
+            )}
           </button>
         </div>
 
         <div>
+          <div className="flex justify-center mb-8">
+            <CompanyLogo 
+              logoUrl={branding?.logo}
+              className="w-auto h-16"
+            />
+          </div>
           <h2 className={`mt-6 text-center text-3xl font-extrabold ${theme === 'dark' ? "text-white" : "text-gray-900"}`}>
-            Sign in to your account
+            {branding?.name || 'Login'}
           </h2>
         </div>
 
-        {success && (
-          <div className="mb-4 p-3 rounded bg-green-100 text-green-600">
-            Login realizado com sucesso! Redirecionando...
+        {/* Mensagens de Erro */}
+        {errors.api && (
+          <div className="mb-4 p-4 rounded-md bg-red-50 border border-red-200">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  {errors.api}
+                </h3>
+              </div>
+            </div>
           </div>
         )}
 
-        {errors.api && (
-          <div className="mb-4 p-3 rounded bg-red-100 text-red-600">
-            {errors.api}
+        {/* Mensagem de Sucesso */}
+        {success && (
+          <div className="mb-4 p-4 rounded-md bg-green-50 border border-green-200">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">
+                  Login realizado com sucesso! Redirecionando...
+                </h3>
+              </div>
+            </div>
           </div>
         )}
 
@@ -157,20 +219,17 @@ const Login = () => {
 
           <div>
             <button 
-              type="submit" 
-              disabled={apiLoading || success}
+              type="submit"
+              disabled={apiLoading}
               className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                ${success 
-                  ? 'bg-green-600 hover:bg-green-700' 
-                  : 'bg-indigo-600 hover:bg-indigo-700'} 
-                focus:outline-none focus:ring-2 focus:ring-offset-2 
-                ${success ? 'focus:ring-green-500' : 'focus:ring-indigo-500'} 
+                ${success ? 'bg-green-600' : 'bg-indigo-600 hover:bg-indigo-700'} 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
                 disabled:opacity-50`}
             >
               {apiLoading 
                 ? "Entrando..." 
                 : success 
-                  ? "Login realizado!" 
+                  ? "Redirecionando..." 
                   : "Entrar"}
             </button>
           </div>

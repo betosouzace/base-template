@@ -11,7 +11,7 @@ const AuthenticatedLayout = ({ children }) => {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       const currentPath = encodeURIComponent(pathname);
-      router.push(`/login?redirectUrl=${currentPath}`);
+      router.replace(`/login?redirectUrl=${currentPath}`);
     }
   }, [isLoading, isAuthenticated, router, pathname]);
 
@@ -23,7 +23,7 @@ const AuthenticatedLayout = ({ children }) => {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : null;
+  return isAuthenticated ? children : null;
 };
 
 export default AuthenticatedLayout; 

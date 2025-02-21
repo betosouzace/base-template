@@ -3,32 +3,29 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   }
 });
 
+// Adiciona o token no header de todas as requisições
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-}, (error) => {
-  return Promise.reject(error);
 });
 
+// Interceptor de resposta para tratar erros de autenticação
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Limpa ambos os storages em caso de erro de autenticação
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
       
-      // Redireciona apenas se não estiver já na página de login
       if (!window.location.pathname.includes('/login')) {
         const currentPath = encodeURIComponent(window.location.pathname);
         window.location.href = `/login?redirectUrl=${currentPath}`;
@@ -38,6 +35,17 @@ api.interceptors.response.use(
   }
 );
 
-export const useApi = () => {
-  return api;
-}; 
+export function useApi() {
+  const setToken = (token) => {
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common['Authorization'];
+    }
+  };
+
+  return {
+    ...api,
+    setToken
+  };
+} 

@@ -48,6 +48,7 @@ export function AuthProvider({ children }) {
       const { token, user } = response.data;
       
       setUser(user);
+      setIsAuthenticated(true);
       api.setToken(token);
       
       if (remember) {
@@ -56,16 +57,31 @@ export function AuthProvider({ children }) {
         sessionStorage.setItem('token', token);
       }
       
+      const redirectUrl = new URLSearchParams(window.location.search).get('redirectUrl');
+      
       if (!user.company_id) {
-        router.push('/wizard');
+        router.replace('/wizard');
+      } else if (redirectUrl) {
+        router.replace(decodeURIComponent(redirectUrl));
       } else {
-        router.push('/dashboard');
+        router.replace('/dashboard');
       }
       
-      return true;
+      return { success: true };
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Erro ao fazer login');
-      return false;
+      console.error('Erro no login:', error);
+      let errorMessage = 'Erro ao fazer login';
+
+      if (error.response?.status === 401) {
+        errorMessage = 'Email ou senha incorretos';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      return { 
+        success: false, 
+        error: errorMessage 
+      };
     }
   };
 

@@ -46,26 +46,38 @@ class CompanyController extends Controller
         // Pega o domínio da requisição
         $host = $request->getHost();
         
-        // Busca a empresa pelo domínio (você precisa adicionar uma coluna domain na tabela companies)
+        // Busca a empresa pelo domínio
         $company = Company::where('domain', $host)->first();
+        
+        // Tema padrão
+        $defaultTheme = [
+            'primaryColor' => '#4F46E5',
+            'primaryColorHover' => '#4338CA',
+            'primaryColorLight' => '#818CF8',
+            'primaryColorDark' => '#3730A3',
+        ];
+
+        $baseUrl = config('app.url');
         
         if (!$company) {
             return response()->json([
-                'theme' => [
-                    'primaryColor' => '#4F46E5',
-                    'primaryColorHover' => '#4338CA',
-                    'primaryColorLight' => '#818CF8',
-                    'primaryColorDark' => '#3730A3',
+                'theme' => $defaultTheme,
+                'branding' => [
+                    'logo' => null,
+                    'icon' => null,
+                    'favicon' => null,
+                    'name' => env('APP_NAME', 'Sistema')
                 ]
             ]);
         }
 
         return response()->json([
-            'theme' => $company->settings['theme'] ?? [
-                'primaryColor' => '#4F46E5',
-                'primaryColorHover' => '#4338CA',
-                'primaryColorLight' => '#818CF8',
-                'primaryColorDark' => '#3730A3',
+            'theme' => $company->settings['theme'] ?? $defaultTheme,
+            'branding' => [
+                'logo' => $company->logo ? "{$baseUrl}/storage/{$company->logo}" : null,
+                'icon' => $company->icon ? "{$baseUrl}/storage/{$company->icon}" : null,
+                'favicon' => $company->favicon ? "{$baseUrl}/storage/{$company->favicon}" : null,
+                'name' => $company->name
             ]
         ]);
     }

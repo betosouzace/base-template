@@ -46,13 +46,16 @@ export function SettingsProvider({ children }) {
   });
 
   const loadSettings = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await api.get('settings');
       const { user_settings, company_settings } = response.data;
       
-      console.log('Dados recebidos da API:', response.data); // Debug
-
       setSettings(prev => ({
         company: {
           name: user?.company?.name || "",
@@ -76,7 +79,9 @@ export function SettingsProvider({ children }) {
       }));
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
-      toast.error('Erro ao carregar configurações');
+      if (error.response?.status !== 401) {
+        toast.error('Erro ao carregar configurações');
+      }
     } finally {
       setLoading(false);
     }
@@ -181,6 +186,19 @@ export function SettingsProvider({ children }) {
     }
   };
 
+  const updateCompanyTheme = (theme) => {
+    setSettings(prev => ({
+      ...prev,
+      company: {
+        ...prev.company,
+        settings: {
+          ...prev.company.settings,
+          theme
+        }
+      }
+    }));
+  };
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -212,6 +230,7 @@ export function SettingsProvider({ children }) {
         updateUserSettings,
         updateCompanySettings,
         updateCompanyBranding,
+        updateCompanyTheme,
         loadSettings
       }}
     >
