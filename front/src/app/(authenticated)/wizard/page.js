@@ -5,10 +5,13 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { useApi } from '@/hooks/useApi';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
+
+// Importando os steps
+import CompanyInfoStep from '@/views/wizard/CompanyInfoStep';
+import PaymentSettingsStep from '@/views/wizard/PaymentSettingsStep';
+import CommunicationSettingsStep from '@/views/wizard/CommunicationSettingsStep';
+import UserPreferencesStep from '@/views/wizard/UserPreferencesStep';
 
 const WizardPage = () => {
   const router = useRouter();
@@ -17,42 +20,61 @@ const WizardPage = () => {
   const { user, updateUserAfterWizard } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   
-  // Usar useEffect para atualizar formData quando settings mudar
+  // Separar dados da empresa e configurações do usuário
   const [formData, setFormData] = useState({
-    name: settings.company.name,
-    document: settings.company.document,
-    email: settings.company.email,
-    phone: settings.company.phone,
-    paymentMethods: settings.company.settings.paymentMethods,
-    currency: settings.company.settings.currency,
-    smtpServer: settings.company.settings.smtpServer,
-    senderEmail: settings.company.settings.senderEmail,
-    whatsappKey: settings.company.settings.whatsappKey,
-    telegramToken: settings.company.settings.telegramToken,
-    theme: settings.user.settings.theme,
-    density: settings.user.settings.density,
-    fontSize: settings.user.settings.fontSize,
-    highContrast: settings.user.settings.highContrast
+    company: {
+      name: '',
+      document: '',
+      email: '',
+      phone: '',
+      settings: {
+        paymentMethods: [],
+        currency: 'BRL',
+        smtpServer: '',
+        senderEmail: '',
+        whatsappKey: '',
+        telegramToken: '',
+      }
+    },
+    user: {
+      settings: {
+        theme: 'light',
+        density: 'normal',
+        fontSize: 'medium',
+        highContrast: false
+      }
+    }
   });
 
   useEffect(() => {
-    setFormData({
-      name: settings.company.name,
-      document: settings.company.document,
-      email: settings.company.email,
-      phone: settings.company.phone,
-      paymentMethods: settings.company.settings.paymentMethods,
-      currency: settings.company.settings.currency,
-      smtpServer: settings.company.settings.smtpServer,
-      senderEmail: settings.company.settings.senderEmail,
-      whatsappKey: settings.company.settings.whatsappKey,
-      telegramToken: settings.company.settings.telegramToken,
-      theme: settings.user.settings.theme,
-      density: settings.user.settings.density,
-      fontSize: settings.user.settings.fontSize,
-      highContrast: settings.user.settings.highContrast
-    });
+    if (settings) {
+      setFormData({
+        company: {
+          name: settings.company?.name || '',
+          document: settings.company?.document || '',
+          email: settings.company?.email || '',
+          phone: settings.company?.phone || '',
+          settings: {
+            paymentMethods: settings.company?.settings?.paymentMethods || [],
+            currency: settings.company?.settings?.currency || 'BRL',
+            smtpServer: settings.company?.settings?.smtpServer || '',
+            senderEmail: settings.company?.settings?.senderEmail || '',
+            whatsappKey: settings.company?.settings?.whatsappKey || '',
+            telegramToken: settings.company?.settings?.telegramToken || '',
+          }
+        },
+        user: {
+          settings: {
+            theme: settings.user?.settings?.theme || 'light',
+            density: settings.user?.settings?.density || 'normal',
+            fontSize: settings.user?.settings?.fontSize || 'medium',
+            highContrast: settings.user?.settings?.highContrast || false
+          }
+        }
+      });
+    }
   }, [settings]);
 
   useEffect(() => {
@@ -73,147 +95,120 @@ const WizardPage = () => {
         router.push('/home');
         return;
       }
-      setCurrentStep(response.data.current_step);
+      setCurrentStep(response.data.current_step || 1);
     } catch (error) {
+      console.error('Erro ao verificar status do wizard:', error);
       toast.error('Erro ao verificar status do wizard');
     }
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newData = { ...prev };
+      
+      // Determina se o campo pertence às configurações da empresa ou do usuário
+      if (field.startsWith('company.')) {
+        const [_, ...path] = field.split('.');
+        let current = newData.company;
+        for (let i = 0; i < path.length - 1; i++) {
+          current = current[path[i]];
+        }
+        current[path[path.length - 1]] = value;
+      } else if (field.startsWith('user.')) {
+        const [_, ...path] = field.split('.');
+        let current = newData.user;
+        for (let i = 0; i < path.length - 1; i++) {
+          current = current[path[i]];
+        }
+        current[path[path.length - 1]] = value;
+      } else {
+        // Campos diretos da empresa
+        newData.company[field] = value;
+      }
+      
+      return newData;
+    });
   };
 
   const handleNext = async () => {
+    setIsLoading(true);
+    setErrors({}); // Limpa erros anteriores
+    
     try {
-      // Se for o último passo, chama handleFinish
       if (currentStep === 4) {
-        await handleFinish();
-        return;
-      }
-
-      // Prepara os dados de acordo com o passo atual
-      let stepData = {};
-      switch (currentStep) {
-        case 1:
-          stepData = {
-            name: formData.name,
-            document: formData.document,
-            email: formData.email,
-            phone: formData.phone
-          };
-          break;
-        case 2:
-          stepData = {
-            paymentMethods: formData.paymentMethods,
-            currency: formData.currency
-          };
-          break;
-        case 3:
-          stepData = {
-            smtpServer: formData.smtpServer,
-            senderEmail: formData.senderEmail,
-            whatsappKey: formData.whatsappKey,
-            telegramToken: formData.telegramToken
-          };
-          break;
-        case 4:
-          stepData = {
-            theme: formData.theme,
-            density: formData.density,
-            fontSize: formData.fontSize,
-            highContrast: formData.highContrast
-          };
-          break;
-      }
-
-      // Salva o passo atual
-      await api.post('wizard/step', {
-        step: currentStep,
-        ...stepData
-      });
-      
-      // Avança para o próximo passo
-      setCurrentStep(prev => prev + 1);
-    } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
-      if (error.response?.data?.errors) {
-        const errorMessages = Object.values(error.response.data.errors)
-          .flat()
-          .join(', ');
-        toast.error(`Erro ao salvar configurações: ${errorMessages}`);
-      } else {
-        toast.error('Erro ao salvar configurações');
-      }
-    }
-  };
-
-  const handleFinish = async () => {
-    try {
-      setIsLoading(true);
-
-      // Valida os dados obrigatórios
-      if (!formData.name || !formData.document || !formData.email || !formData.phone) {
-        toast.error('Por favor, preencha todos os campos obrigatórios');
-        return;
-      }
-
-      // Prepara os dados da empresa e do usuário
-      const wizardData = {
-        company: {
-          name: formData.name,
-          document: formData.document,
-          email: formData.email,
-          phone: formData.phone,
-          settings: {
-            paymentMethods: formData.paymentMethods || [],
-            currency: formData.currency || "BRL",
-            smtpServer: formData.smtpServer || "",
-            senderEmail: formData.senderEmail || "",
-            whatsappKey: formData.whatsappKey || "",
-            telegramToken: formData.telegramToken || "",
-            theme: {
-              primaryColor: "#4F46E5",
-              primaryColorHover: "#4338CA",
-              primaryColorLight: "#818CF8",
-              primaryColorDark: "#3730A3"
+        await api.post('wizard/finish', {
+          company: {
+            name: formData.company.name,
+            document: formData.company.document,
+            email: formData.company.email,
+            phone: formData.company.phone,
+            settings: {
+              payment_methods: formData.company.settings.paymentMethods,
+              currency: formData.company.settings.currency,
+              smtp_server: formData.company.settings.smtpServer,
+              sender_email: formData.company.settings.senderEmail,
+              whatsapp_key: formData.company.settings.whatsappKey,
+              telegram_token: formData.company.settings.telegramToken
+            }
+          },
+          user: {
+            settings: {
+              theme: formData.user.settings.theme,
+              density: formData.user.settings.density,
+              font_size: formData.user.settings.fontSize,
+              high_contrast: formData.user.settings.highContrast
             }
           }
-        },
-        user: {
-          settings: {
-            theme: formData.theme || "light",
-            density: formData.density || "normal",
-            fontSize: formData.fontSize || "medium",
-            highContrast: formData.highContrast || false
-          }
-        }
-      };
+        });
 
-      // Envia os dados para a API
-      const response = await api.post('wizard/finish', wizardData);
-      
-      // Atualiza o contexto de autenticação com os novos dados do usuário
-      updateUserAfterWizard(response.data.user);
-      
-      // Recarrega as configurações para atualizar o contexto
-      await loadSettings();
-      
-      // Redireciona para /home ao invés de /dashboard
-      router.replace('/home');
-      
-      toast.success('Configuração inicial concluída com sucesso!');
-    } catch (error) {
-      console.error('Erro ao finalizar wizard:', error);
-      if (error.response?.data?.errors) {
-        const errorMessages = Object.values(error.response.data.errors)
-          .flat()
-          .join(', ');
-        toast.error(`Erro ao finalizar wizard: ${errorMessages}`);
+        await loadSettings();
+        await updateUserAfterWizard();
+
+        toast.success('Configuração concluída com sucesso!');
+        router.push('/home');
       } else {
-        toast.error('Erro ao finalizar wizard');
+        let stepData = {};
+        
+        switch (currentStep) {
+          case 1:
+            stepData = {
+              step: currentStep,
+              name: formData.company.name,
+              document: formData.company.document,
+              email: formData.company.email,
+              phone: formData.company.phone
+            };
+            break;
+            
+          case 2:
+            stepData = {
+              step: currentStep,
+              paymentMethods: formData.company.settings.paymentMethods,
+              currency: formData.company.settings.currency
+            };
+            break;
+            
+          case 3:
+            stepData = {
+              step: currentStep,
+              smtp_server: formData.company.settings.smtpServer,
+              sender_email: formData.company.settings.senderEmail,
+              whatsapp_key: formData.company.settings.whatsappKey,
+              telegram_token: formData.company.settings.telegramToken
+            };
+            break;
+        }
+
+        await api.post('wizard/step', stepData);
+        setCurrentStep(prev => prev + 1);
+      }
+    } catch (error) {
+      if (error.response?.status === 422) {
+        setErrors(error.response.data.errors);
+        toast.error('Por favor, preencha todos os campos obrigatórios.');
+      } else {
+        console.error('Erro ao salvar configurações:', error);
+        toast.error('Erro ao salvar as configurações. Por favor, tente novamente.');
       }
     } finally {
       setIsLoading(false);
@@ -221,159 +216,21 @@ const WizardPage = () => {
   };
 
   const renderStep = () => {
+    const stepProps = {
+      formData,
+      handleInputChange,
+      errors
+    };
+
     switch (currentStep) {
       case 1:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold mb-4 dark:text-white">Dados da Empresa</h2>
-            <Input
-              label="Nome da Empresa"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              required
-              fullWidth
-            />
-            <Input
-              label="CNPJ"
-              value={formData.document}
-              onChange={(e) => handleInputChange('document', e.target.value)}
-              required
-              fullWidth
-            />
-            <Input
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              required
-              fullWidth
-            />
-            <Input
-              label="Telefone"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              required
-              fullWidth
-            />
-          </div>
-        );
-
+        return <CompanyInfoStep {...stepProps} />;
       case 2:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold mb-4 dark:text-white">Configurações de Pagamento</h2>
-            <Select
-              label="Moeda Principal"
-              value={formData.currency}
-              onChange={(e) => handleInputChange('currency', e.target.value)}
-              options={[
-                { value: 'BRL', label: 'Real Brasileiro (BRL)' },
-                { value: 'USD', label: 'Dólar Americano (USD)' },
-                { value: 'EUR', label: 'Euro (EUR)' }
-              ]}
-              required
-              fullWidth
-            />
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Métodos de Pagamento
-              </label>
-              <div className="space-y-2">
-                {['pix', 'credit_card', 'bank_slip', 'bank_transfer'].map((method) => (
-                  <ToggleSwitch
-                    key={method}
-                    label={method.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    checked={formData.paymentMethods.includes(method)}
-                    onChange={(checked) => {
-                      const newMethods = checked
-                        ? [...formData.paymentMethods, method]
-                        : formData.paymentMethods.filter(m => m !== method);
-                      handleInputChange('paymentMethods', newMethods);
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
+        return <PaymentSettingsStep {...stepProps} />;
       case 3:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold mb-4 dark:text-white">Configurações de Comunicação</h2>
-            <Input
-              label="Servidor SMTP"
-              value={formData.smtpServer}
-              onChange={(e) => handleInputChange('smtpServer', e.target.value)}
-              fullWidth
-            />
-            <Input
-              label="Email do Remetente"
-              type="email"
-              value={formData.senderEmail}
-              onChange={(e) => handleInputChange('senderEmail', e.target.value)}
-              fullWidth
-            />
-            <Input
-              label="Chave WhatsApp"
-              value={formData.whatsappKey}
-              onChange={(e) => handleInputChange('whatsappKey', e.target.value)}
-              fullWidth
-            />
-            <Input
-              label="Token Telegram"
-              value={formData.telegramToken}
-              onChange={(e) => handleInputChange('telegramToken', e.target.value)}
-              fullWidth
-            />
-          </div>
-        );
-
+        return <CommunicationSettingsStep {...stepProps} />;
       case 4:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold mb-4 dark:text-white">Preferências de Interface</h2>
-            <Select
-              label="Tema"
-              value={formData.theme}
-              onChange={(e) => handleInputChange('theme', e.target.value)}
-              options={[
-                { value: 'light', label: 'Claro' },
-                { value: 'dark', label: 'Escuro' },
-                { value: 'system', label: 'Sistema' }
-              ]}
-              fullWidth
-            />
-            <Select
-              label="Densidade"
-              value={formData.density}
-              onChange={(e) => handleInputChange('density', e.target.value)}
-              options={[
-                { value: 'compact', label: 'Compacta' },
-                { value: 'normal', label: 'Normal' },
-                { value: 'comfortable', label: 'Confortável' }
-              ]}
-              fullWidth
-            />
-            <Select
-              label="Tamanho da Fonte"
-              value={formData.fontSize}
-              onChange={(e) => handleInputChange('fontSize', e.target.value)}
-              options={[
-                { value: 'small', label: 'Pequena' },
-                { value: 'medium', label: 'Média' },
-                { value: 'large', label: 'Grande' }
-              ]}
-              fullWidth
-            />
-            <ToggleSwitch
-              label="Alto Contraste"
-              checked={formData.highContrast}
-              onChange={(checked) => handleInputChange('highContrast', checked)}
-            />
-          </div>
-        );
-
+        return <UserPreferencesStep {...stepProps} />;
       default:
         return null;
     }

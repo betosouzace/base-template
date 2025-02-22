@@ -91,9 +91,6 @@ class SettingsController extends Controller
             'document' => 'required|string|max:20',
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
-            'favicon' => 'nullable|image|mimes:ico,png|max:100'
         ]);
 
         $user = $request->user();
@@ -105,20 +102,11 @@ class SettingsController extends Controller
             ], 404);
         }
 
+        // Pega o domínio da requisição
+        $host = $request->getHost();
+
         // Decodifica as configurações do JSON
         $settings = json_decode($request->settings, true);
-
-        // Processa e salva os arquivos
-        $paths = [];
-        foreach (['logo', 'icon', 'favicon'] as $type) {
-            if ($request->hasFile($type)) {
-                if ($company->$type) {
-                    Storage::disk('public')->delete($company->$type);
-                }
-                $path = $request->file($type)->store('company/' . $company->id, 'public');
-                $paths[$type] = $path;
-            }
-        }
 
         // Atualiza os dados da empresa
         $company->update([
@@ -126,22 +114,13 @@ class SettingsController extends Controller
             'document' => $request->document,
             'email' => $request->email,
             'phone' => $request->phone,
-            'settings' => $settings,
-            ...$paths // Adiciona os caminhos dos arquivos se existirem
+            'domain' => $host, // Salva o domínio
+            'settings' => $settings
         ]);
 
         return response()->json([
-            'message' => 'Configurações da empresa atualizadas com sucesso',
-            'company' => [
-                'name' => $company->name,
-                'document' => $company->document,
-                'email' => $company->email,
-                'phone' => $company->phone,
-                'settings' => $company->settings,
-                'logo' => $company->logo,
-                'icon' => $company->icon,
-                'favicon' => $company->favicon
-            ]
+            'message' => 'Configurações atualizadas com sucesso',
+            'company' => $company
         ]);
     }
 

@@ -8,7 +8,8 @@ const Sidebar = ({ isOpen, isMobile, toggleSidebar }) => {
   const [activeMenu, setActiveMenu] = useState(null);
   const [activeSubMenu, setActiveSubMenu] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
-  const { theme, sidebarTheme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, isDarkMode } = useTheme();
+  const darkMode = isDarkMode(true); // true para indicar que é o Sidebar
 
   // Fecha o menu ao trocar para modo mobile
   useEffect(() => {
@@ -46,7 +47,7 @@ const Sidebar = ({ isOpen, isMobile, toggleSidebar }) => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={`fixed left-0 top-0 h-full transition-all duration-300 z-30 flex flex-col
-          ${sidebarTheme === 'dark' ? 'dark bg-gray-800' : 'bg-white'}
+          ${theme !== 'light' ? 'dark bg-gray-800' : 'bg-white'}
           ${isMobile 
             ? (isOpen ? 'w-full translate-x-0' : '-translate-x-full') 
             : (effectiveIsOpen ? 'w-64' : 'w-20')}`}

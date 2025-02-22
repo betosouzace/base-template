@@ -1,8 +1,8 @@
 'use client';
-import { useSettings } from '@/contexts/SettingsContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export function ThemeWrapper({ children }) {
-  const { settings } = useSettings();
+  const { companyTheme } = useTheme();
   
   // Valores padrão caso as configurações não estejam disponíveis
   const defaultTheme = {
@@ -12,8 +12,8 @@ export function ThemeWrapper({ children }) {
     primaryColorDark: '#3730A3',
   };
 
-  // Usa o operador de coalescência nula para garantir valores padrão
-  const theme = settings?.company?.settings?.theme ?? defaultTheme;
+  // Usa o tema da empresa ou o tema padrão
+  const theme = companyTheme?.theme ?? defaultTheme;
 
   return (
     <div style={{

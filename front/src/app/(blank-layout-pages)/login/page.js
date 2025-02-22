@@ -37,13 +37,8 @@ const Login = () => {
         });
         
         const { branding } = response.data;
-        // Atualiza o branding com as URLs completas
-        setBranding({
-          ...branding,
-          logo: branding.logo ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.logo}` : null,
-          icon: branding.icon ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.icon}` : null,
-          favicon: branding.favicon ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${branding.favicon}` : null,
-        });
+        // Usa as URLs completas retornadas pela API
+        setBranding(branding);
         
         document.title = branding.name;
       } catch (error) {

@@ -46,15 +46,9 @@ class CompanyController extends Controller
         // Pega o domínio da requisição
         $host = $request->getHost();
         
-        // Debug para verificar o host recebido
-        \Log::info('Host da requisição:', ['host' => $host]);
-        
         // Busca a empresa pelo domínio
         $company = Company::where('domain', $host)->first();
         
-        // Debug para verificar a empresa encontrada
-        \Log::info('Empresa encontrada:', ['company' => $company]);
-
         // Tema padrão
         $defaultTheme = [
             'primaryColor' => '#4F46E5',
@@ -63,10 +57,9 @@ class CompanyController extends Controller
             'primaryColorDark' => '#3730A3',
         ];
 
-        // Se não encontrar a empresa, tenta pegar a primeira empresa do banco
+        // Se não encontrar a empresa pelo domínio, tenta pegar a primeira empresa
         if (!$company) {
             $company = Company::first();
-            \Log::info('Usando primeira empresa:', ['company' => $company]);
         }
 
         // Se ainda não tiver empresa, retorna o tema padrão
@@ -82,12 +75,19 @@ class CompanyController extends Controller
             ]);
         }
 
+        // Função helper para gerar URL completa
+        $getFullUrl = function($path) {
+            if (!$path) return null;
+            if (str_starts_with($path, 'http')) return $path;
+            return asset('storage/' . $path);
+        };
+
         return response()->json([
             'theme' => $company->settings['theme'] ?? $defaultTheme,
             'branding' => [
-                'logo' => $company->logo,
-                'icon' => $company->icon,
-                'favicon' => $company->favicon,
+                'logo' => $getFullUrl($company->logo),
+                'icon' => $getFullUrl($company->icon),
+                'favicon' => $getFullUrl($company->favicon),
                 'name' => $company->name
             ]
         ]);

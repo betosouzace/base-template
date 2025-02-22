@@ -16,32 +16,6 @@ export function CompanyLogo({
   const { theme } = useTheme();
   const color = theme === 'dark' ? "white" : "#111827";
 
-  const getFullUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    return `${process.env.NEXT_PUBLIC_API_URL}/storage/${url}`;
-  };
-
-  const renderDefault = () => {
-    const defaultClasses = `${className} ${theme === 'dark' ? darkClassName : lightClassName}`;
-    
-    switch (type) {
-      case 'icon':
-      case 'favicon':
-        return (
-          <div className={defaultClasses}>
-            <DefaultIcon color={color} className="w-full h-full" />
-          </div>
-        );
-      default:
-        return (
-          <div className={defaultClasses}>
-            <DefaultLogo color={color} className="w-full h-full" />
-          </div>
-        );
-    }
-  };
-
   const renderImage = (url) => {
     const dimensions = {
       logo: { width: 200, height: 60 },
@@ -50,21 +24,29 @@ export function CompanyLogo({
     };
 
     const { width, height } = dimensions[type] || dimensions.logo;
-    const fullUrl = getFullUrl(url);
 
-    if (!fullUrl) {
-      return renderDefault();
+    if (!url) {
+      return type === 'icon' ? (
+        <DefaultIcon className={theme === 'dark' ? darkClassName : lightClassName} />
+      ) : (
+        <DefaultLogo className={theme === 'dark' ? darkClassName : lightClassName} />
+      );
     }
 
     return (
       <div style={{ width, height }} className={`relative flex items-center ${className}`}>
         <Image
-          src={fullUrl}
+          src={url}
           alt={`${type} preview`}
           width={width}
           height={height}
           style={{ objectFit: 'contain' }}
-          onError={() => renderDefault()}
+          onError={(e) => {
+            e.target.onerror = null;
+            type === 'icon' ? 
+              e.target.parentNode.replaceChild(<DefaultIcon className={theme === 'dark' ? darkClassName : lightClassName} />, e.target) :
+              e.target.parentNode.replaceChild(<DefaultLogo className={theme === 'dark' ? darkClassName : lightClassName} />, e.target);
+          }}
           unoptimized={true}
           className={`${className} object-contain`}
         />

@@ -265,6 +265,9 @@ const SettingsPage = () => {
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-medium">Cores da Marca</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Estas configurações serão aplicadas a todos os usuários da empresa.
+          </p>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <ColorPicker
               label="Cor Primária"
@@ -450,8 +453,11 @@ const SettingsPage = () => {
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-            Tema
+            Preferências de Tema
           </label>
+          <p className="text-sm text-gray-500 mb-4">
+            Estas são suas preferências pessoais de tema.
+          </p>
           <div className="space-y-4">
             <ToggleSwitch
               label="Modo Claro"

@@ -15,7 +15,11 @@ class Company extends Model
         'document',
         'email',
         'phone',
-        'settings'
+        'settings',
+        'domain',
+        'logo',
+        'icon',
+        'favicon'
     ];
 
     protected $casts = [

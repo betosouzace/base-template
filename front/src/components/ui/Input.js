@@ -26,13 +26,24 @@ export function Input({
   };
 
   const stateStyles = {
-    normal: `border-gray-300 focus:border-[var(--primary-color)] focus:ring-[var(--primary-color)] 
-             dark:border-gray-600 dark:bg-gray-700 dark:text-white
-             autofill:bg-white dark:autofill:bg-gray-700
-             autofill:text-gray-900 dark:autofill:text-white
-             [-webkit-autofill]:bg-white dark:[-webkit-autofill]:bg-gray-700
-             [-webkit-autofill]:text-gray-900 dark:[-webkit-autofill]:text-white`,
-    error: "border-red-500 focus:border-red-500 focus:ring-red-500",
+    normal: `
+      border-gray-300 
+      focus:border-[var(--primary-color)] 
+      focus:ring-[var(--primary-color)] 
+      dark:border-gray-600 
+      dark:bg-gray-700 
+      dark:text-white
+      dark:placeholder-gray-400
+    `,
+    error: `
+      border-red-500 
+      focus:border-red-500 
+      focus:ring-red-500 
+      dark:border-red-500 
+      dark:bg-gray-700 
+      dark:text-white
+      dark:placeholder-gray-400
+    `,
     disabled: "bg-gray-100 cursor-not-allowed dark:bg-gray-800"
   };
 
@@ -40,10 +51,24 @@ export function Input({
     iconPosition === 'left' ? 'pl-10' : 'pr-10'
   ) : '';
 
+  const inputStyles = `
+    ${baseStyles}
+    ${sizeStyles[size]}
+    ${disabled ? stateStyles.disabled : error ? stateStyles.error : stateStyles.normal}
+    ${fullWidth ? 'w-full' : ''}
+    ${iconStyles}
+    ${error ? 'dark:border-red-500' : 'dark:border-gray-600'}
+    dark:bg-gray-700 
+    dark:text-white
+  `;
+
   return (
     <div className={`${fullWidth ? 'w-full' : ''} ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className={`
+          block text-sm font-medium mb-1
+          ${error ? 'text-red-500 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}
+        `}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -51,29 +76,25 @@ export function Input({
       <div className="relative">
         {Icon && iconPosition === 'left' && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Icon className="h-5 w-5 text-gray-400" />
+            <Icon className={`h-5 w-5 ${error ? 'text-red-400' : 'text-gray-400'}`} />
           </div>
         )}
         <input
           disabled={disabled}
           required={required}
-          className={`
-            ${baseStyles}
-            ${sizeStyles[size]}
-            ${disabled ? stateStyles.disabled : error ? stateStyles.error : stateStyles.normal}
-            ${fullWidth ? 'w-full' : ''}
-            ${iconStyles}
-          `}
+          className={inputStyles}
           {...props}
         />
         {Icon && iconPosition === 'right' && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <Icon className="h-5 w-5 text-gray-400" />
+            <Icon className={`h-5 w-5 ${error ? 'text-red-400' : 'text-gray-400'}`} />
           </div>
         )}
       </div>
       {(error || helperText) && (
-        <p className={`mt-1 text-sm ${error ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
+        <p className={`mt-1 text-sm ${
+          error ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
+        }`}>
           {error || helperText}
         </p>
       )}
