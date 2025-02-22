@@ -22,16 +22,28 @@ export function AuthProvider({ children }) {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
-        const response = await api.get('/me');
+        api.setToken(token);
+        const response = await api.get('me');
         setUser(response.data);
         setIsAuthenticated(true);
       }
     } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
+      console.error('Erro ao verificar autenticação:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
+      api.setToken(null);
       setIsAuthenticated(false);
       setUser(null);
+      
+      if (window.location.pathname !== '/login') {
+        const currentPath = encodeURIComponent(window.location.pathname);
+        router.replace(`/login?redirectUrl=${currentPath}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -39,6 +51,10 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password, remember = false) => {
     try {
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      api.setToken(null);
+
       const response = await api.post('login', { 
         email, 
         password,
@@ -47,9 +63,10 @@ export function AuthProvider({ children }) {
       
       const { token, user } = response.data;
       
+      api.setToken(token);
+      
       setUser(user);
       setIsAuthenticated(true);
-      api.setToken(token);
       
       if (remember) {
         localStorage.setItem('token', token);
@@ -57,7 +74,7 @@ export function AuthProvider({ children }) {
         sessionStorage.setItem('token', token);
       }
       
-      const redirectUrl = new URLSearchParams(window.location.search).get('redirectUrl');
+      const redirectUrl = searchParams.get('redirectUrl');
       
       if (!user.company_id) {
         router.replace('/wizard');
@@ -69,11 +86,18 @@ export function AuthProvider({ children }) {
       
       return { success: true };
     } catch (error) {
-      console.error('Erro no login:', error);
+      console.error('Erro no login:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+
       let errorMessage = 'Erro ao fazer login';
 
       if (error.response?.status === 401) {
         errorMessage = 'Email ou senha incorretos';
+      } else if (error.response?.status === 429) {
+        errorMessage = 'Muitas tentativas. Tente novamente mais tarde.';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }

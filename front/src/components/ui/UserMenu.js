@@ -91,8 +91,8 @@ const UserMenu = ({ show, setShow, setShowNotifications }) => {
           className="fixed md:absolute right-0 md:right-2 top-[4.5rem] w-full md:w-56 bg-white dark:bg-gray-800 md:rounded-lg shadow-xl z-50 max-h-[calc(100vh-6rem)]"
         >
           <div className="md:hidden p-4 border-b dark:border-gray-700">
-            <p className="font-medium text-gray-800 dark:text-white">John Doe</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Admin</p>
+            <p className="font-medium text-gray-800 dark:text-white">{user?.name || 'User'}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
           </div>
 
           <div className="p-3 space-y-1">

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { FiMenu, FiChevronLeft, FiX } from 'react-icons/fi';
+import { FiMenu, FiChevronLeft, FiX, FiSearch } from 'react-icons/fi';
 import SearchDialog from '../ui/SearchDialog';
 import NotificationsMenu from '../ui/NotificationsMenu';
 import UserMenu from '../ui/UserMenu';
@@ -8,6 +8,7 @@ import { CompanyLogo } from '../CompanyLogo';
 import { DefaultIcon } from '../DefaultIcon';
 import { useApi } from '@/hooks/useApi';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Input } from '@/components/ui/Input';
 
 const Header = ({ searchQuery, setSearchQuery, toggleSidebar, isOpen, isMobile }) => {
   const [showSearchDialog, setShowSearchDialog] = useState(false);
@@ -43,7 +44,8 @@ const Header = ({ searchQuery, setSearchQuery, toggleSidebar, isOpen, isMobile }
 
   return (
     <div className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 shadow-sm z-40">
-      <div className="max-w-[1920px] mx-auto px-4 h-full flex items-center justify-between">
+      <div className="max-w-[1920px] mx-auto px-4 h-full flex items-center">
+        {/* Lado esquerdo - Logo e botão do menu */}
         <div className="flex items-center space-x-4">
           <button
             className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -69,10 +71,10 @@ const Header = ({ searchQuery, setSearchQuery, toggleSidebar, isOpen, isMobile }
               <CompanyLogo
                 iconUrl={branding.icon}
                 type="icon"
-                className="w-14 h-14"
+                className="w-8 h-8"
               />
             ) : (
-              <div className="w-14 h-14 flex items-center justify-center">
+              <div className="w-8 h-8 flex items-center justify-center">
                 <DefaultIcon className="text-white" />
               </div>
             )
@@ -87,25 +89,45 @@ const Header = ({ searchQuery, setSearchQuery, toggleSidebar, isOpen, isMobile }
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <SearchDialog
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            showDialog={showSearchDialog}
-            setShowDialog={setShowSearchDialog}
-          />
-          <NotificationsMenu
-            show={showNotifications}
-            setShow={setShowNotifications}
-            setShowUserMenu={setShowUserMenu}
-          />
-          <UserMenu
-            show={showUserMenu}
-            setShow={setShowUserMenu}
-            setShowNotifications={setShowNotifications}
-          />
+        {/* Lado direito - Busca e menus */}
+        <div className="flex items-center gap-2 ml-auto">
+          {/* Input de busca */}
+          <div className={`${isMobile ? 'w-50' : 'w-64'}`}>
+            <Input
+              placeholder={`Pesquisar... ${isMobile ? '' : '(Ctrl + K)'}`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              icon={FiSearch}
+              className="!mb-0"
+              size="sm"
+              fullWidth={true}
+              onClick={() => setShowSearchDialog(true)}
+            />
+          </div>
+
+          {/* Container para notificações e menu do usuário */}
+          <div className="flex items-center gap-3">
+            <NotificationsMenu
+              show={showNotifications}
+              setShow={setShowNotifications}
+              setShowUserMenu={setShowUserMenu}
+            />
+            <UserMenu
+              show={showUserMenu}
+              setShow={setShowUserMenu}
+              setShowNotifications={setShowNotifications}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Dialog de busca */}
+      <SearchDialog
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        showDialog={showSearchDialog}
+        setShowDialog={setShowSearchDialog}
+      />
     </div>
   );
 };

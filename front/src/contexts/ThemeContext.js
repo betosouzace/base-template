@@ -4,19 +4,19 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light');
-  const [sidebarTheme, setSidebarTheme] = useState('light');
+  const [theme, setTheme] = useState('semi-dark');
+  const [sidebarTheme, setSidebarTheme] = useState('dark');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Recupera a preferência do usuário ou usa o padrão 'light'
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    const savedSidebarTheme = localStorage.getItem('sidebarTheme') || 'light';
+    // Recupera a preferência do usuário ou usa o padrão 'semi-dark'
+    const savedTheme = localStorage.getItem('theme') || 'semi-dark';
+    const savedSidebarTheme = localStorage.getItem('sidebarTheme') || 'dark';
     setTheme(savedTheme);
     setSidebarTheme(savedSidebarTheme);
     
     // Aplica o tema inicial
-    if (savedTheme === 'dark') {
+    if (savedTheme === 'dark' || savedTheme === 'semi-dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');

@@ -5,6 +5,10 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { useApi } from '@/hooks/useApi';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Button } from '@/components/ui/Button';
+import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 
 const WizardPage = () => {
   const router = useRouter();
@@ -58,7 +62,7 @@ const WizardPage = () => {
   useEffect(() => {
     // Se tiver empresa vinculada, redireciona para o dashboard
     if (user?.company_id) {
-      router.push('/dashboard');
+      router.push('/home');
     }
   }, [user, router]);
 
@@ -66,7 +70,7 @@ const WizardPage = () => {
     try {
       const response = await api.get('wizard/status');
       if (!response.data.needs_wizard) {
-        router.push('/settings');
+        router.push('/home');
         return;
       }
       setCurrentStep(response.data.current_step);
@@ -221,79 +225,72 @@ const WizardPage = () => {
       case 1:
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Informações da Empresa</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <input
-                type="text"
-                placeholder="Nome da Empresa"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-              <input
-                type="text"
-                placeholder="CNPJ"
-                value={formData.document}
-                onChange={(e) => handleInputChange('document', e.target.value)}
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-              <input
-                type="tel"
-                placeholder="Telefone"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-            </div>
+            <h2 className="text-xl font-semibold mb-4 dark:text-white">Dados da Empresa</h2>
+            <Input
+              label="Nome da Empresa"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              required
+              fullWidth
+            />
+            <Input
+              label="CNPJ"
+              value={formData.document}
+              onChange={(e) => handleInputChange('document', e.target.value)}
+              required
+              fullWidth
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              required
+              fullWidth
+            />
+            <Input
+              label="Telefone"
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
+              required
+              fullWidth
+            />
           </div>
         );
 
       case 2:
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Métodos de Pagamento</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Moeda Padrão
-                </label>
-                <select
-                  value={formData.currency}
-                  onChange={(e) => handleInputChange('currency', e.target.value)}
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="BRL">Real (BRL)</option>
-                  <option value="USD">Dólar (USD)</option>
-                  <option value="EUR">Euro (EUR)</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Métodos de Pagamento Aceitos
-                </label>
-                {["Cartão de Crédito", "Transferência Bancária", "Pix", "Boleto"].map((method) => (
-                  <label key={method} className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.paymentMethods.includes(method)}
-                      onChange={(e) => {
-                        const methods = e.target.checked
-                          ? [...formData.paymentMethods, method]
-                          : formData.paymentMethods.filter(m => m !== method);
-                        handleInputChange('paymentMethods', methods);
-                      }}
-                      className="rounded border-gray-300 text-primary shadow-sm focus:border-primary-light focus:ring focus:ring-primary-light focus:ring-opacity-50"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">{method}</span>
-                  </label>
+            <h2 className="text-xl font-semibold mb-4 dark:text-white">Configurações de Pagamento</h2>
+            <Select
+              label="Moeda Principal"
+              value={formData.currency}
+              onChange={(e) => handleInputChange('currency', e.target.value)}
+              options={[
+                { value: 'BRL', label: 'Real Brasileiro (BRL)' },
+                { value: 'USD', label: 'Dólar Americano (USD)' },
+                { value: 'EUR', label: 'Euro (EUR)' }
+              ]}
+              required
+              fullWidth
+            />
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Métodos de Pagamento
+              </label>
+              <div className="space-y-2">
+                {['pix', 'credit_card', 'bank_slip', 'bank_transfer'].map((method) => (
+                  <ToggleSwitch
+                    key={method}
+                    label={method.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    checked={formData.paymentMethods.includes(method)}
+                    onChange={(checked) => {
+                      const newMethods = checked
+                        ? [...formData.paymentMethods, method]
+                        : formData.paymentMethods.filter(m => m !== method);
+                      handleInputChange('paymentMethods', newMethods);
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -303,123 +300,77 @@ const WizardPage = () => {
       case 3:
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Canais de Comunicação</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Servidor SMTP
-                </label>
-                <input
-                  type="text"
-                  placeholder="smtp.exemplo.com"
-                  value={formData.smtpServer}
-                  onChange={(e) => handleInputChange('smtpServer', e.target.value)}
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email do Remetente
-                </label>
-                <input
-                  type="email"
-                  placeholder="noreply@empresa.com"
-                  value={formData.senderEmail}
-                  onChange={(e) => handleInputChange('senderEmail', e.target.value)}
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Chave WhatsApp
-                </label>
-                <input
-                  type="text"
-                  value={formData.whatsappKey}
-                  onChange={(e) => handleInputChange('whatsappKey', e.target.value)}
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Token Telegram
-                </label>
-                <input
-                  type="text"
-                  value={formData.telegramToken}
-                  onChange={(e) => handleInputChange('telegramToken', e.target.value)}
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-            </div>
+            <h2 className="text-xl font-semibold mb-4 dark:text-white">Configurações de Comunicação</h2>
+            <Input
+              label="Servidor SMTP"
+              value={formData.smtpServer}
+              onChange={(e) => handleInputChange('smtpServer', e.target.value)}
+              fullWidth
+            />
+            <Input
+              label="Email do Remetente"
+              type="email"
+              value={formData.senderEmail}
+              onChange={(e) => handleInputChange('senderEmail', e.target.value)}
+              fullWidth
+            />
+            <Input
+              label="Chave WhatsApp"
+              value={formData.whatsappKey}
+              onChange={(e) => handleInputChange('whatsappKey', e.target.value)}
+              fullWidth
+            />
+            <Input
+              label="Token Telegram"
+              value={formData.telegramToken}
+              onChange={(e) => handleInputChange('telegramToken', e.target.value)}
+              fullWidth
+            />
           </div>
         );
 
       case 4:
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Preferências de Interface</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tema
-                </label>
-                <select
-                  value={formData.theme}
-                  onChange={(e) => handleInputChange('theme', e.target.value)}
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="light">Claro</option>
-                  <option value="semi-dark">Semi Escuro</option>
-                  <option value="dark">Escuro</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Densidade
-                </label>
-                <select
-                  value={formData.density}
-                  onChange={(e) => handleInputChange('density', e.target.value)}
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="compact">Compacta</option>
-                  <option value="normal">Normal</option>
-                  <option value="comfortable">Confortável</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tamanho da Fonte
-                </label>
-                <select
-                  value={formData.fontSize}
-                  onChange={(e) => handleInputChange('fontSize', e.target.value)}
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="small">Pequena</option>
-                  <option value="medium">Média</option>
-                  <option value="large">Grande</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.highContrast}
-                    onChange={(e) => handleInputChange('highContrast', e.target.checked)}
-                    className="rounded border-gray-300 text-primary shadow-sm focus:border-primary-light focus:ring focus:ring-primary-light focus:ring-opacity-50"
-                  />
-                  <span className="text-gray-700 dark:text-gray-300">Alto Contraste</span>
-                </label>
-              </div>
-            </div>
+            <h2 className="text-xl font-semibold mb-4 dark:text-white">Preferências de Interface</h2>
+            <Select
+              label="Tema"
+              value={formData.theme}
+              onChange={(e) => handleInputChange('theme', e.target.value)}
+              options={[
+                { value: 'light', label: 'Claro' },
+                { value: 'dark', label: 'Escuro' },
+                { value: 'system', label: 'Sistema' }
+              ]}
+              fullWidth
+            />
+            <Select
+              label="Densidade"
+              value={formData.density}
+              onChange={(e) => handleInputChange('density', e.target.value)}
+              options={[
+                { value: 'compact', label: 'Compacta' },
+                { value: 'normal', label: 'Normal' },
+                { value: 'comfortable', label: 'Confortável' }
+              ]}
+              fullWidth
+            />
+            <Select
+              label="Tamanho da Fonte"
+              value={formData.fontSize}
+              onChange={(e) => handleInputChange('fontSize', e.target.value)}
+              options={[
+                { value: 'small', label: 'Pequena' },
+                { value: 'medium', label: 'Média' },
+                { value: 'large', label: 'Grande' }
+              ]}
+              fullWidth
+            />
+            <ToggleSwitch
+              label="Alto Contraste"
+              checked={formData.highContrast}
+              onChange={(checked) => handleInputChange('highContrast', checked)}
+            />
           </div>
         );
 
@@ -434,14 +385,14 @@ const WizardPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h1 className="text-2xl font-bold">Configuração Inicial</h1>
-              <span className="text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Configuração Inicial</h1>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 Etapa {currentStep} de 4
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
               <div
-                className="bg-blue-600 h-2.5 rounded-full"
+                className="bg-[var(--primary-color)] h-2.5 rounded-full transition-all duration-300"
                 style={{ width: `${(currentStep / 4) * 100}%` }}
               ></div>
             </div>
@@ -450,22 +401,14 @@ const WizardPage = () => {
           {renderStep()}
 
           <div className="flex justify-end mt-6">
-            <button
+            <Button
               onClick={handleNext}
               disabled={isLoading}
-              className={`px-4 py-2 btn-primary rounded flex items-center ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              loading={isLoading}
+              variant="primary"
             >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processando...
-                </>
-              ) : (
-                currentStep === 4 ? 'Finalizar' : 'Próximo'
-              )}
-            </button>
+              {currentStep === 4 ? 'Finalizar' : 'Próximo'}
+            </Button>
           </div>
         </div>
       </div>

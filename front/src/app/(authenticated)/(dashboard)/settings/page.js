@@ -12,6 +12,16 @@ import "react-toastify/dist/ReactToastify.css";
 import { useSettings } from '@/contexts/SettingsContext';
 import { CompanyLogo } from '@/components/CompanyLogo';
 
+// Importando os componentes UI
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { ColorPicker } from '@/components/ui/ColorPicker';
+import { InputFile } from '@/components/ui/InputFile';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
+import { TextArea } from '@/components/ui/TextArea';
+import { DragAndDrop } from '@/components/ui/DragAndDrop';
+
 const SettingsPage = () => {
   const { settings, loading, updateCompanySettings, updateUserSettings, updateCompanyBranding, loadSettings } = useSettings();
   const { theme, toggleTheme } = useTheme();
@@ -83,10 +93,11 @@ const SettingsPage = () => {
     primaryColorLight: false,
     primaryColorDark: false
   });
+  const [isLoading, setIsLoading] = useState(false);
   const [logoFile, setLogoFile] = useState(null);
   const [iconFile, setIconFile] = useState(null);
   const [faviconFile, setFaviconFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [hasFileChanges, setHasFileChanges] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -126,8 +137,7 @@ const SettingsPage = () => {
     }));
   };
 
-  const handleFileChange = (e, type) => {
-    const file = e.target.files[0];
+  const handleFileChange = (file, type) => {
     if (!file) return;
 
     // Novo limite unificado de 10MB para todos os tipos
@@ -136,7 +146,6 @@ const SettingsPage = () => {
 
     if (fileSize > maxSize) {
       toast.error(`O arquivo deve ter no máximo 10MB`);
-      e.target.value = ''; // Limpa o input
       return;
     }
 
@@ -174,16 +183,21 @@ const SettingsPage = () => {
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      
-      // Atualiza configurações da empresa
+
+      // Salva as configurações gerais
       await updateCompanySettings(formData);
-      
-      // Atualiza configurações do usuário
-      await updateUserSettings(formData);
-      
-      // Recarrega as configurações
-      await loadSettings();
-      
+
+      // Se houver alterações nos arquivos, salva-os separadamente
+      if (hasFileChanges) {
+        const files = {
+          logo: logoFile,
+          icon: iconFile,
+          favicon: faviconFile
+        };
+        await updateCompanyBranding(files);
+        setHasFileChanges(false);
+      }
+
       toast.success('Configurações salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
@@ -220,6 +234,8 @@ const SettingsPage = () => {
         
         // Recarrega as configurações para atualizar as URLs das imagens
         await loadSettings();
+        
+        toast.success('Imagens atualizadas com sucesso!');
       }
     } catch (error) {
       console.error('Erro ao salvar imagens:', error);
@@ -250,139 +266,219 @@ const SettingsPage = () => {
         <div>
           <h3 className="text-lg font-medium">Cores da Marca</h3>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Cor Primária</label>
-              <input
-                type="color"
-                value={theme.primaryColor}
-                onChange={(e) => handleColorChange(e.target.value, 'primaryColor')}
-                className="w-full h-10 p-1 rounded border"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Cor Hover</label>
-              <input
-                type="color"
-                value={theme.primaryColorHover}
-                onChange={(e) => handleColorChange(e.target.value, 'primaryColorHover')}
-                className="w-full h-10 p-1 rounded border"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Cor Clara</label>
-              <input
-                type="color"
-                value={theme.primaryColorLight}
-                onChange={(e) => handleColorChange(e.target.value, 'primaryColorLight')}
-                className="w-full h-10 p-1 rounded border"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Cor Escura</label>
-              <input
-                type="color"
-                value={theme.primaryColorDark}
-                onChange={(e) => handleColorChange(e.target.value, 'primaryColorDark')}
-                className="w-full h-10 p-1 rounded border"
-              />
-            </div>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Logo da Empresa
-          </label>
-          <span className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">
-            Máximo: 10MB (JPG, PNG, GIF)
-          </span>
-          <input
-            type="file"
-            onChange={(e) => handleFileChange(e, 'logo')}
-            accept="image/*"
-            className="mt-1 block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-indigo-50 file:text-indigo-700
-              hover:file:bg-indigo-100
-              dark:file:bg-gray-700 dark:file:text-gray-300"
-          />
-          <div className="mt-2">
-            <CompanyLogo
-              logoUrl={settings.company.logo}
-              type="logo"
-              className="h-16 object-contain"
+            <ColorPicker
+              label="Cor Primária"
+              color={theme.primaryColor}
+              onChange={(color) => handleColorChange(color, 'primaryColor')}
+            />
+            <ColorPicker
+              label="Cor Hover"
+              color={theme.primaryColorHover}
+              onChange={(color) => handleColorChange(color, 'primaryColorHover')}
+            />
+            <ColorPicker
+              label="Cor Clara"
+              color={theme.primaryColorLight}
+              onChange={(color) => handleColorChange(color, 'primaryColorLight')}
+            />
+            <ColorPicker
+              label="Cor Escura"
+              color={theme.primaryColorDark}
+              onChange={(color) => handleColorChange(color, 'primaryColorDark')}
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Ícone da Empresa
-          </label>
-          <span className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">
-            Máximo: 10MB (JPG, PNG, GIF)
-          </span>
-          <input
-            type="file"
-            onChange={(e) => handleFileChange(e, 'icon')}
+        <div className="space-y-4">
+          <DragAndDrop
+            label="Logo da Empresa"
             accept="image/*"
-            className="mt-1 block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-indigo-50 file:text-indigo-700
-              hover:file:bg-indigo-100
-              dark:file:bg-gray-700 dark:file:text-gray-300"
+            helperText="Máximo: 10MB (JPG, PNG, GIF)"
+            value={logoFile || settings?.company?.logo}
+            onChange={(file) => {
+              setLogoFile(file);
+              setHasFileChanges(true);
+            }}
           />
-          <div className="mt-2">
-            <CompanyLogo
-              iconUrl={settings.company.icon}
-              type="icon"
-              className="h-12 w-12 object-contain rounded-lg border dark:border-gray-700"
-            />
-          </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Favicon
-          </label>
-          <span className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">
-            Máximo: 10MB (ICO, PNG)
-          </span>
-          <input
-            type="file"
-            onChange={(e) => handleFileChange(e, 'favicon')}
+          <DragAndDrop
+            label="Ícone da Empresa"
+            accept="image/*"
+            helperText="Máximo: 10MB (JPG, PNG, GIF)"
+            value={iconFile || settings?.company?.icon}
+            onChange={(file) => {
+              setIconFile(file);
+              setHasFileChanges(true);
+            }}
+          />
+
+          <DragAndDrop
+            label="Favicon"
             accept=".ico,image/x-icon,image/png"
-            className="mt-1 block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-indigo-50 file:text-indigo-700
-              hover:file:bg-indigo-100
-              dark:file:bg-gray-700 dark:file:text-gray-300"
+            helperText="Máximo: 10MB (ICO, PNG)"
+            value={faviconFile || settings?.company?.favicon}
+            onChange={(file) => {
+              setFaviconFile(file);
+              setHasFileChanges(true);
+            }}
           />
-          <div className="mt-2">
-            <CompanyLogo
-              faviconUrl={settings.company.favicon}
-              type="favicon"
-              className="h-8 w-8 object-contain rounded-lg border dark:border-gray-700"
+
+          {/* Botão para salvar imagens */}
+          {hasFileChanges && (
+            <Button
+              onClick={async () => {
+                try {
+                  setIsLoading(true);
+                  const files = {
+                    logo: logoFile,
+                    icon: iconFile,
+                    favicon: faviconFile
+                  };
+                  await updateCompanyBranding(files);
+                  setHasFileChanges(false);
+                  toast.success('Imagens atualizadas com sucesso!');
+                } catch (error) {
+                  console.error('Erro ao salvar imagens:', error);
+                  toast.error('Erro ao salvar imagens');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              loading={isLoading}
+              className="mt-4"
+            >
+              Salvar Imagens
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCompanySection = () => {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Input
+            label="Nome da Empresa"
+            required
+            value={formData.company.name || ''}
+            onChange={(e) => handleInputChange('company', 'name', e.target.value)}
+          />
+          <Input
+            label="CNPJ"
+            required
+            value={formData.company.document || ''}
+            onChange={(e) => handleInputChange('company', 'document', e.target.value)}
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={formData.company.email || ''}
+            onChange={(e) => handleInputChange('company', 'email', e.target.value)}
+          />
+          <Input
+            label="Telefone"
+            type="tel"
+            value={formData.company.phone || ''}
+            onChange={(e) => handleInputChange('company', 'phone', e.target.value)}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderPaymentSection = () => {
+    return (
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Métodos de Pagamento
+          </label>
+          <div className="space-y-2">
+            {["Cartão de Crédito", "Transferência Bancária", "Pix"].map((method) => (
+              <Checkbox
+                key={method}
+                label={method}
+                checked={formData.company.settings.paymentMethods?.includes(method)}
+                onChange={(e) => {
+                  const methods = e.target.checked
+                    ? [...(formData.company.settings.paymentMethods || []), method]
+                    : formData.company.settings.paymentMethods?.filter((m) => m !== method);
+                  handleSettingsChange('company', 'paymentMethods', methods);
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCommunicationSection = () => {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Input
+            label="Servidor SMTP"
+            value={formData.company.settings.smtpServer || ''}
+            onChange={(e) => handleSettingsChange('company', 'smtpServer', e.target.value)}
+          />
+          <Input
+            label="Email do Remetente"
+            type="email"
+            value={formData.company.settings.senderEmail || ''}
+            onChange={(e) => handleSettingsChange('company', 'senderEmail', e.target.value)}
+          />
+          <Input
+            label="Chave WhatsApp"
+            value={formData.company.settings.whatsappKey || ''}
+            onChange={(e) => handleSettingsChange('company', 'whatsappKey', e.target.value)}
+          />
+          <Input
+            label="Token Telegram"
+            value={formData.company.settings.telegramToken || ''}
+            onChange={(e) => handleSettingsChange('company', 'telegramToken', e.target.value)}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderInterfaceSection = () => {
+    return (
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+            Tema
+          </label>
+          <div className="space-y-4">
+            <ToggleSwitch
+              label="Modo Claro"
+              checked={theme === 'light'}
+              onChange={() => {
+                toggleTheme('light');
+                handleSettingsChange('user', 'theme', 'light');
+              }}
+            />
+            <ToggleSwitch
+              label="Modo Semi-Escuro"
+              checked={theme === 'semi-dark'}
+              onChange={() => {
+                toggleTheme('semi-dark');
+                handleSettingsChange('user', 'theme', 'semi-dark');
+              }}
+            />
+            <ToggleSwitch
+              label="Modo Escuro"
+              checked={theme === 'dark'}
+              onChange={() => {
+                toggleTheme('dark');
+                handleSettingsChange('user', 'theme', 'dark');
+              }}
             />
           </div>
         </div>
-
-        {(logoFile || iconFile || faviconFile) && (
-          <div className="flex justify-end">
-            <button
-              onClick={handleSaveImages}
-              disabled={isLoading}
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Salvando...' : 'Salvar Imagens'}
-            </button>
-          </div>
-        )}
       </div>
     );
   };
@@ -392,232 +488,13 @@ const SettingsPage = () => {
       case "branding":
         return renderBrandingSection();
       case "company":
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Nome da Empresa *
-                </label>
-                <input
-                  type="text"
-                  value={formData.company.name || ''}
-                  onChange={(e) => handleInputChange('company', 'name', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  CNPJ *
-                </label>
-                <input
-                  type="text"
-                  value={formData.company.document || ''}
-                  onChange={(e) => handleInputChange('company', 'document', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.company.email || ''}
-                  onChange={(e) => handleInputChange('company', 'email', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Telefone
-                </label>
-                <input
-                  type="tel"
-                  value={formData.company.phone || ''}
-                  onChange={(e) => handleInputChange('company', 'phone', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-            </div>
-          </div>
-        );
+        return renderCompanySection();
       case "payment":
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Métodos de Pagamento
-              </label>
-              <div className="space-y-2">
-                {["Cartão de Crédito", "Transferência Bancária", "Pix"].map((method) => (
-                  <label key={method} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.company.settings.paymentMethods?.includes(method)}
-                      onChange={(e) => {
-                        const methods = e.target.checked
-                          ? [...(formData.company.settings.paymentMethods || []), method]
-                          : formData.company.settings.paymentMethods?.filter((m) => m !== method);
-                        handleSettingsChange('company', 'paymentMethods', methods);
-                      }}
-                      className="w-4 h-4 text-indigo-500"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">{method}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
+        return renderPaymentSection();
       case "communication":
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Servidor SMTP
-                </label>
-                <input
-                  type="text"
-                  value={formData.company.settings.smtpServer || ''}
-                  onChange={(e) => handleSettingsChange('company', 'smtpServer', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email do Remetente
-                </label>
-                <input
-                  type="email"
-                  value={formData.company.settings.senderEmail || ''}
-                  onChange={(e) => handleSettingsChange('company', 'senderEmail', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Chave WhatsApp
-                </label>
-                <input
-                  type="text"
-                  value={formData.company.settings.whatsappKey || ''}
-                  onChange={(e) => handleSettingsChange('company', 'whatsappKey', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Token Telegram
-                </label>
-                <input
-                  type="text"
-                  value={formData.company.settings.telegramToken || ''}
-                  onChange={(e) => handleSettingsChange('company', 'telegramToken', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-            </div>
-          </div>
-        );
+        return renderCommunicationSection();
       case "interface":
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                Tema
-              </label>
-              <div className="inline-flex rounded-md shadow-sm" role="group">
-                <button
-                  type="button"
-                  onClick={() => {
-                    toggleTheme('light');
-                    handleSettingsChange('user', 'theme', 'light');
-                  }}
-                  className={`
-                    inline-flex items-center px-4 py-2 text-sm font-medium 
-                    border border-gray-200 
-                    rounded-l-lg 
-                    hover:bg-gray-100 
-                    hover:text-indigo-700 
-                    focus:z-10 
-                    focus:ring-2 
-                    focus:ring-indigo-500 
-                    focus:text-indigo-700
-                    dark:border-gray-600 
-                    dark:hover:text-white 
-                    dark:hover:bg-gray-600 
-                    ${theme === 'light' 
-                      ? 'bg-indigo-500 text-white hover:text-white hover:bg-indigo-600' 
-                      : 'bg-white text-gray-900 dark:bg-gray-700 dark:text-white'
-                    }
-                  `}
-                >
-                  <BsSun className="mr-2 h-4 w-4" />
-                  Claro
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    toggleTheme('semi-dark');
-                    handleSettingsChange('user', 'theme', 'semi-dark');
-                  }}
-                  className={`
-                    inline-flex items-center px-4 py-2 text-sm font-medium 
-                    border-t border-b border-gray-200
-                    hover:bg-gray-100 
-                    hover:text-indigo-700 
-                    focus:z-10 
-                    focus:ring-2 
-                    focus:ring-indigo-500 
-                    focus:text-indigo-700
-                    dark:border-gray-600 
-                    dark:hover:text-white 
-                    dark:hover:bg-gray-600
-                    ${theme === 'semi-dark' 
-                      ? 'bg-indigo-500 text-white hover:text-white hover:bg-indigo-600' 
-                      : 'bg-white text-gray-900 dark:bg-gray-700 dark:text-white'
-                    }
-                  `}
-                >
-                  <HiOutlineAdjustments className="mr-2 h-4 w-4" />
-                  Semi Escuro
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    toggleTheme('dark');
-                    handleSettingsChange('user', 'theme', 'dark');
-                  }}
-                  className={`
-                    inline-flex items-center px-4 py-2 text-sm font-medium 
-                    border border-gray-200 
-                    rounded-r-lg 
-                    hover:bg-gray-100 
-                    hover:text-indigo-700 
-                    focus:z-10 
-                    focus:ring-2 
-                    focus:ring-indigo-500 
-                    focus:text-indigo-700
-                    dark:border-gray-600 
-                    dark:hover:text-white 
-                    dark:hover:bg-gray-600
-                    ${theme === 'dark' 
-                      ? 'bg-indigo-500 text-white hover:text-white hover:bg-indigo-600' 
-                      : 'bg-white text-gray-900 dark:bg-gray-700 dark:text-white'
-                    }
-                  `}
-                >
-                  <BsMoonStars className="mr-2 h-4 w-4" />
-                  Escuro
-                </button>
-              </div>
-            </div>
-          </div>
-        );
+        return renderInterfaceSection();
       default:
         return null;
     }
@@ -635,25 +512,25 @@ const SettingsPage = () => {
     <div className="min-h-screen p-4 md:p-6">
       <div className="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Configurações do Sistema</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+            Configurações do Sistema
+          </h1>
         </div>
 
         <div className="flex flex-col md:flex-row">
           {/* Sidebar com tabs */}
           <div className="md:w-64 p-4 border-r border-gray-200 dark:border-gray-700">
             {tabs.map((tab) => (
-              <button
+              <Button
                 key={tab.id}
+                variant={activeTab === tab.id ? 'primary' : 'ghost'}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center p-3 mb-2 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-indigo-500 text-white"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
+                fullWidth
+                className="justify-start mb-2"
               >
                 <span className="mr-3">{tab.icon}</span>
                 {tab.label}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -661,18 +538,20 @@ const SettingsPage = () => {
           <div className="flex-1 p-6">
             {/* Botões de ação */}
             <div className="flex justify-end space-x-4 mb-6">
-              <button
+              <Button
+                variant="secondary"
                 onClick={handleReset}
-                className="flex items-center px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                className="flex items-center"
               >
                 <FiRotateCcw className="mr-2" /> Resetar
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSave}
-                className="flex items-center px-4 py-2 text-white bg-indigo-500 rounded-lg hover:bg-indigo-600"
+                className="flex items-center"
+                loading={isLoading}
               >
                 <FiSave className="mr-2" /> Salvar Alterações
-              </button>
+              </Button>
             </div>
 
             {/* Conteúdo das tabs */}

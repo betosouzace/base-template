@@ -1,12 +1,18 @@
 'use client';
 import { useState, useEffect } from "react";
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaGoogle, FaFacebook } from "react-icons/fa";
+import { FaEnvelope, FaGoogle, FaFacebook } from "react-icons/fa";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { CompanyLogo } from '@/components/CompanyLogo';
 import { useApi } from '@/hooks/useApi';
+
+// Importando componentes UI
+import { Input } from '@/components/ui/Input';
+import { Password } from '@/components/ui/Password';
+import { Button } from '@/components/ui/Button';
+import { Checkbox } from '@/components/ui/Checkbox';
 
 const Login = () => {
   const { login } = useAuth();
@@ -93,16 +99,17 @@ const Login = () => {
     <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${theme === 'dark' ? "bg-gray-900" : "bg-gray-100"}`}>
       <div className={`max-w-md w-full space-y-8 ${theme === 'dark' ? "bg-gray-800" : "bg-white"} p-10 rounded-xl shadow-2xl transition-all duration-300`}>
         <div className="flex justify-end">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          <Button
+            variant="ghost"
+            onClick={() => toggleTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="p-2"
           >
             {theme === 'dark' ? (
               <MdLightMode className="h-5 w-5 text-gray-300" />
             ) : (
               <MdDarkMode className="h-5 w-5 text-gray-600" />
             )}
-          </button>
+          </Button>
         </div>
 
         <div>
@@ -152,108 +159,54 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="rounded-md shadow-sm space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="email">
-                Email
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaEnvelope className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`appearance-none block w-full pl-10 pr-3 py-2 border ${
-                    errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-md shadow-sm placeholder-gray-400 
-                  focus:outline-none focus:ring-primary focus:border-primary
-                  dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-400
-                  text-sm`}
-                  placeholder="seu@email.com"
-                  required
-                />
-              </div>
-              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
-            </div>
+            <Input
+              id="email"
+              type="email"
+              label="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              icon={FaEnvelope}
+              error={errors.email}
+              required
+              fullWidth
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="password">
-                Senha
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaLock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`appearance-none block w-full pl-10 pr-10 py-2 border ${
-                    errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-md shadow-sm placeholder-gray-400 
-                  focus:outline-none focus:ring-primary focus:border-primary
-                  dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-400
-                  text-sm`}
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPassword ? (
-                    <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  ) : (
-                    <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  )}
-                </button>
-              </div>
-              {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password}</p>}
-            </div>
+            <Password
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              error={errors.password}
+              required
+              fullWidth
+            />
           </div>
 
           <div className="flex items-center justify-between mt-6">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                Lembrar-me
-              </label>
-            </div>
+            <Checkbox
+              id="remember-me"
+              label="Lembrar-me"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-primary hover:text-primary-hover">
+              <a href="#" className="font-medium text-[var(--primary-color)] hover:text-[var(--primary-color-hover)]">
                 Esqueceu sua senha?
               </a>
             </div>
           </div>
 
-          <div>
-            <button 
-              type="submit"
-              disabled={apiLoading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                ${success ? 'bg-green-600' : 'bg-indigo-600 hover:bg-indigo-700'} 
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                disabled:opacity-50`}
-            >
-              {apiLoading 
-                ? "Entrando..." 
-                : success 
-                  ? "Redirecionando..." 
-                  : "Entrar"}
-            </button>
-          </div>
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            loading={apiLoading}
+            disabled={apiLoading || success}
+          >
+            {apiLoading ? "Entrando..." : success ? "Redirecionando..." : "Entrar"}
+          </Button>
 
           <div className="mt-6">
             <div className="relative">
@@ -261,33 +214,38 @@ const Login = () => {
                 <div className={`w-full border-t ${theme === 'dark' ? "border-gray-600" : "border-gray-300"}`}></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className={`px-2 ${theme === 'dark' ? "bg-gray-800 text-gray-300" : "bg-white text-gray-500"}`}>Or continue with</span>
+                <span className={`px-2 ${theme === 'dark' ? "bg-gray-800 text-gray-300" : "bg-white text-gray-500"}`}>
+                  Ou continue com
+                </span>
               </div>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className={`w-full inline-flex justify-center py-2 px-4 rounded-md shadow-sm text-sm font-medium ${theme === 'dark' ? "bg-gray-700 text-white hover:bg-gray-600" : "bg-white text-gray-500 hover:bg-gray-50"} border ${theme === 'dark' ? "border-gray-600" : "border-gray-300"}`}
+              <Button
+                variant="secondary"
+                onClick={() => {}}
+                className="inline-flex justify-center"
               >
-                <FaGoogle className="w-5 h-5 text-red-500" />
-                <span className="ml-2">Google</span>
-              </button>
-              <button
-                type="button"
-                className={`w-full inline-flex justify-center py-2 px-4 rounded-md shadow-sm text-sm font-medium ${theme === 'dark' ? "bg-gray-700 text-white hover:bg-gray-600" : "bg-white text-gray-500 hover:bg-gray-50"} border ${theme === 'dark' ? "border-gray-600" : "border-gray-300"}`}
+                <FaGoogle className="w-5 h-5 text-red-500 mr-2" />
+                Google
+              </Button>
+              
+              <Button
+                variant="secondary"
+                onClick={() => {}}
+                className="inline-flex justify-center"
               >
-                <FaFacebook className="w-5 h-5 text-blue-600" />
-                <span className="ml-2">Facebook</span>
-              </button>
+                <FaFacebook className="w-5 h-5 text-blue-600 mr-2" />
+                Facebook
+              </Button>
             </div>
           </div>
 
           <div className="text-center">
             <p className={`text-sm ${theme === 'dark' ? "text-gray-300" : "text-gray-600"}`}>
-              Don't have an account?{" "}
-              <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                Sign up
+              Não tem uma conta?{" "}
+              <a href="/register" className="font-medium text-[var(--primary-color)] hover:text-[var(--primary-color-hover)]">
+                Cadastre-se
               </a>
             </p>
           </div>
