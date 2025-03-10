@@ -36,6 +36,7 @@ services:
       MYSQL_DATABASE: laravel
       MYSQL_ROOT_PASSWORD: root
       MYSQL_PASSWORD: root
+      TZ: "America/Sao_Paulo"
     volumes:
       - db-data:/var/lib/mysql
     networks:
